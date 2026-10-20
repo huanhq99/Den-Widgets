@@ -1,0 +1,1 @@
+{"name":"den-widgets","private":true,"type":"module","scripts":{"test":"node checks.mjs","fixture":"node checks.mjs --serve"},"engines":{"node":">=22"},"license":"MIT"}

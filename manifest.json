@@ -1,0 +1,23 @@
+{
+  "title": "Den 官方模块",
+  "description": "Den 维护的内容模块合集",
+  "widgets": [
+    {
+      "id": "den.hongguotv",
+      "title": "红果短剧",
+      "description": "连接自部署 HongguoTV 服务，浏览、搜索和按集播放。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/hongguo.js"
+    },
+    {
+      "id": "den.huangguo.compat",
+      "title": "黄果接口适配",
+      "description": "连接自行配置的兼容接口，按需解析当前分集。封面代理与令牌由用户填写。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/huangguo.js"
+    }
+  ],
+  "icon": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/icon.png"
+}
