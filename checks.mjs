@@ -55,11 +55,22 @@ async function run(){
   await assert.rejects(()=>c2.loadHot({}),/填写服务 API/);
   assert.equal(c2.WidgetMetadata.globalParams.find(p=>p.name==='coverToken').value,'');
   const manifest=JSON.parse(await readFile(new URL('manifest.json',root),'utf8'));
-  assert.equal(manifest.widgets.length,2);assert.equal(new Set(manifest.widgets.map(e=>e.id)).size,2);
+  assert.equal(manifest.widgets.length,4);assert.equal(new Set(manifest.widgets.map(e=>e.id)).size,4);
   assert.deepEqual(manifest,JSON.parse(await readFile(new URL('den-widgets.fwd',root),'utf8')));
   for(const entry of manifest.widgets){ assert.equal(new URL(entry.url).hostname,'raw.githubusercontent.com'); }
   console.log('Huangguo: configurable API, proxy parameters, 60-episode detail without prewarming, lazy episode 50, no proxy credential forwarding and empty secret defaults PASS');
-  console.log('Manifest: both entries, unique identities and matching .fwd PASS');
+  for(const kind of ['novel','comic']) {
+    const reading=vm.createContext({});
+    vm.runInContext(await readFile(new URL(kind+'.js',root),'utf8'),reading);
+    const metadata=reading.WidgetMetadata;
+    assert.equal(metadata.id,'den.reading.'+kind);
+    assert.equal(metadata.denReadingKind,kind);
+    assert.equal(metadata.modules.length,0);
+    assert.equal(manifest.widgets.find(e=>e.id===metadata.id).url,'https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/'+kind+'.js');
+    assert.equal(metadata.globalParams,undefined);
+  }
+  console.log('Reading: separate novel/comic native-extension identities, no video functions or embedded source accounts PASS');
+  console.log('Manifest: four entries, unique identities and matching .fwd PASS');
 
 }
 if(process.argv.includes('--serve')){

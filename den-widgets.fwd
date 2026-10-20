@@ -17,6 +17,22 @@
       "author": "Den",
       "version": "1.0.0",
       "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/huangguo.js"
+    },
+    {
+      "id": "den.reading.novel",
+      "title": "小说书源",
+      "description": "导入阅读 3.x 书源，搜索小说、收藏并继续阅读。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/novel.js"
+    },
+    {
+      "id": "den.reading.comic",
+      "title": "漫画图源",
+      "description": "导入异次元或阅读 3.x 图源，搜索漫画、收藏并继续阅读。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/comic.js"
     }
   ],
   "icon": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/icon.png"
