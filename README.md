@@ -1,7 +1,5 @@
 # Den Widgets
 
-Den 开源模块合集。清单与脚本参照 [ForwardWidget](https://github.com/InchStudio/ForwardWidgets) 的 `widgets` / `WidgetMetadata` 格式编写，提供可查看、可更新的独立插件；不附带媒体内容、服务器账号或服务口令。
-
 ## 导入链接
 
 在支持模块合集的 Den 中打开 **设置 → 模块 → 右上角添加 → 通过链接添加**，粘贴：
