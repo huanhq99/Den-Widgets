@@ -20,7 +20,13 @@ GitHub 的 `blob` 文件页面不是原始文件；推荐复制上面的 Raw 链
 
 ## 1. 红果短剧
 
-使用 `hongguo.js` 连接你自己部署的 [HongguoTV](https://github.com/N3urda/hongguoTV) API v1 服务。
+Den 的红果短剧功能接入的服务端项目是 **[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)**，通过其 **API v1** 获取推荐、搜索、剧集详情和播放地址。请先按上游项目的说明自行部署服务端，再在 Den 中配置服务地址。
+
+项目分工与来源：
+
+- **红果服务端：**[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)，提供红果内容接口与媒体代理，采用 [GPL-3.0 许可](https://github.com/N3urda/hongguoTV/blob/main/LICENSE)。服务端及其修改须遵循上游许可。
+- **Den 模块适配器：**本仓库的 [`hongguo.js`](./hongguo.js)，用于连接上述自部署服务；本仓库的 MIT 许可仅适用于本仓库的适配器、清单、测试和文档，不改变上游服务端的许可。
+- **Den App：**负责原生界面、播放器、选集、收藏和续播。本仓库提供模块适配器，App 源码不在此仓库中。
 
 1. 在合集中安装“红果短剧”。
 2. 点击红果模块，填写完整的服务地址（包括协议、端口和必要的路径），例如 `http://NAS-IP:8787/`。
