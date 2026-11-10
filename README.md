@@ -20,12 +20,15 @@ GitHub 的 `blob` 文件页面不是原始文件；推荐复制上面的 Raw 链
 
 ## 1. 红果短剧
 
-Den 的红果短剧功能接入的服务端项目是 **[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)**，通过其 **API v1** 获取推荐、搜索、剧集详情和播放地址。请先按上游项目的说明自行部署服务端，再在 Den 中配置服务地址。
+Den 的红果短剧功能接入的服务端项目是 **[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)**，通过其 **API v1** 获取推荐、搜索、剧集详情和播放地址。已有服务器可以继续使用；希望将接口直接部署到 Cloudflare 的用户，可按下面的独立教程操作。
+
+**[红果 Cloudflare 部署教程 →](services/hongguo-worker/README.md)**：从下载源码、登录 CF、设置访问口令到导入 Den，附更新方法和常见报错。接口与 JS 都可部署到自己的 CF，无需 NAS 常驻。**目前是测试版，稳定连续播放尚未通过；成功部署不等于整集或连播可用。**
 
 项目分工与来源：
 
 - **红果服务端：**[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)，提供红果内容接口与媒体代理，采用 [GPL-3.0 许可](https://github.com/N3urda/hongguoTV/blob/main/LICENSE)。服务端及其修改须遵循上游许可。
 - **Den 模块适配器：**本仓库的 [`hongguo.js`](./hongguo.js)，用于连接上述自部署服务；本仓库的 MIT 许可仅适用于本仓库的适配器、清单、测试和文档，不改变上游服务端的许可。
+- **Cloudflare 测试后端：**[`services/hongguo-worker`](services/hongguo-worker)，保留 API v1、更新底层请求；此目录整体为 GPL-3.0-only，来源及 Apache-2.0 等许可另有说明，不因放在此仓库而改成 MIT。
 - **Den App：**负责原生界面、播放器、选集、收藏和续播。本仓库提供模块适配器，App 源码不在此仓库中。
 
 1. 在合集中安装“红果短剧”。
@@ -89,4 +92,4 @@ node checks.mjs
 
 ## 许可
 
-新增的适配器、清单、测试和文档使用 MIT 许可。Den 名称与图标用于标识此项目，不代表上游服务或 ForwardWidget 官方授权。
+适配器、清单、根目录测试和原有文档使用 MIT 许可。`services/hongguo-worker` 独立后端目录按其 GPL-3.0-only 及保留的上游许可分发，详见该目录 LICENSE／NOTICE；根目录 MIT 不覆盖其 GPL 后端。Den 名称与图标用于标识此项目，不代表上游服务或 ForwardWidget 官方授权。

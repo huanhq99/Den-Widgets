@@ -1,0 +1,41 @@
+HongguoWorker isolated GPL service vendor source
+
+media.mjs contains selected and adapted parsing/cryptographic functions from:
+N3urda/hongguoTV commit eea73e6a45569a2cbbb9440f7cd5290c459b0b70,
+server/vendor/hongguo.cjs, originally woshishiq1/drpys
+spider/js/红果果[短].js at 22261adfa31435e3b3ef5a730b8a2a75bcaf1715.
+https://github.com/N3urda/hongguoTV/blob/eea73e6a45569a2cbbb9440f7cd5290c459b0b70/server/vendor/hongguo.cjs
+https://github.com/woshishiq1/drpys/tree/22261adfa31435e3b3ef5a730b8a2a75bcaf1715
+GPL-3.0-only, full licenses retained beside this file.
+
+Changes: static ESM exports, Workers node:crypto/Buffer imports; no VM/FS/axios,
+no upstream signing/device constants or rule runtime. Bounded sample indices,
+rejection of unsupported subsample encryption/IV formats, binary search into
+sample ranges, original protected sample entry codec retained from frma.
+Provider HTTP transport is maintained independently. Current upstream requests
+use registered anonymous 7.3.9.32 identities and protocol.mjs, not the obsolete
+unsigned multi-video transport. Historical unsigned probes are kept only as
+failed diagnostic evidence in out/hongguo-cloudflare-2026-11-10.
+No portion of this service is linked or copied into the Den App target.
+
+keys.mjs is a portable translation of internal/drm/spade.go from
+beilunyang/openhongguo 42b73f201309423f012d483bfc0ce579dcc0937c (2026-11-04).
+Copyright retained by the upstream contributors, Apache-2.0 license retained
+in LICENSE.openhongguo. Adds wrapper size checks and 128-bit key requirement.
+
+protocol.mjs contains selected signing arithmetic adapted from the same fixed
+hongguoTV source above (GPL-3.0-only), with fresh per-installation identity,
+injected deterministic entropy, portable SM3, and no upstream shared devices.
+Protocol request fields, registration envelope and TTEncrypt are adapted from:
+beilunyang/openhongguo commit 42b73f201309423f012d483bfc0ce579dcc0937c
+(2026-11-04, v0.2.0), internal/protocol/{app,device,register,request,tt_encrypt}.go,
+sdk/model/device.go, and internal/protocol/sign/*.go for cross-checking.
+https://github.com/beilunyang/openhongguo/tree/42b73f201309423f012d483bfc0ce579dcc0937c
+Apache-2.0; full text retained as LICENSE.openhongguo.
+Changes: Workers-compatible ESM/Buffer/node:crypto/node:zlib, pure JavaScript SM3,
+explicit request builders with no fetch/FS/VM/eval/native executable dependency,
+strict guest registration validation and 7.3.9.32 ordered anonymous requests.
+The public upstream synthetic signature vectors are retained in protocol.test.mjs;
+passing them validates arithmetic and request construction, not live availability.
+This combined isolated service remains distributed under GPL-3.0-only. It must
+not be linked or copied into the Den App target.
