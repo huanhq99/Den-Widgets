@@ -174,29 +174,37 @@ export function createProvider({ fetch: fetcher = globalThis.fetch, now = Date.n
     }
     return waitFor(registration,signal);
   }
-  async function appJSON(build, signal) {
+  async function appJSON(build, signal, alternate) {
     const bounded=linkedSignal(signal,AbortSignal.timeout(preparationTimeout));
     for(let attempt=0;attempt<2;attempt++) {
-      const identity=await registered(bounded); const request=build(identity);
-      let data;
-      try {
-        const response=await upstream(request.url,{...request,signal:bounded});
-        data=await responseJSON(response,bounded);
-      } catch(error) {
-        // One empty/expired response may refresh this anonymous session. Explicit
-        // rejection/rate limits never trigger rotation. Registration is globally
-        // capped to two attempts per isolate per ten-minute window.
-        if(error.code==='UPSTREAM_EMPTY_RESPONSE' && attempt===0) { if(guest===identity)guest=null; continue; }
-        throw error;
+      const identity=await registered(bounded);
+      const routes=alternate?[build,alternate]:[build];
+      for(let route=0;route<routes.length;route++) {
+        let data;
+        try {
+          const request=routes[route](identity);
+          const response=await upstream(request.url,{...request,signal:bounded});
+          data=await responseJSON(response,bounded);
+        } catch(error) {
+          // Try one protocol route with the same device before a bounded refresh.
+          // Explicit denials, timeouts and rate limits never rotate identities.
+          if(error.code==='UPSTREAM_EMPTY_RESPONSE') {
+            if(route+1<routes.length)continue;
+            if(attempt===0) { if(guest===identity)guest=null; break; }
+          }
+          throw error;
+        }
+        if(Number(data.code ?? data.Code ?? 0)!==0)throw fail('Anonymous upstream access was rejected','ANONYMOUS_REJECTED');
+        return data;
       }
-      if(Number(data.code ?? data.Code ?? 0)!==0)throw fail('Anonymous upstream access was rejected','ANONYMOUS_REJECTED');
-      return data;
     }
     throw fail('Anonymous playback is unavailable','ANONYMOUS_LIMITED');
   }
   async function resolve(id, signal) {
-    const data=await appJSON(identity=>protocol.signedVideoModel(identity,{itemId:id,now:now()}),signal);
-    let model; try { model=typeof data.data?.video_model==='string'?JSON.parse(data.data.video_model):data.data?.video_model; }
+    const data=await appJSON(identity=>protocol.signedVideoModel(identity,{itemId:id,now:now()}),signal,
+      identity=>protocol.signedVideoModel(identity,{itemId:id,now:now(),batch:true}));
+    const entry=data.data?.video_model?data.data:data.data?.[id];
+    let model; try { model=typeof entry?.video_model==='string'?JSON.parse(entry.video_model):entry?.video_model; }
     catch { throw fail('Invalid video model'); }
     if(!model || typeof model!=='object')throw fail('Video model is unavailable');
     const raw=model.video_list;

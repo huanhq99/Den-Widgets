@@ -63,8 +63,9 @@ test('ordered signed search current app fingerprint and POST body integrity',()=
  const play=signedVideoModel(device,{itemId:'123',now,entropy});
  assert.equal(play.method,'POST'); assert.equal(new URL(play.url).pathname,'/novel/player/video_model/v1/');
  assert.equal(play.headers['x-ss-stub'],createHash('md5').update(play.body).digest('hex').toUpperCase());
- assert.deepEqual(JSON.parse(play.body),{biz_param:{need_all_video_definition:true,video_id_type:0,video_platform:3},video_id:'123'});
- const other=signedVideoModel(device,{itemId:'124',now,entropy}); assert.notEqual(play.headers['x-medusa'],other.headers['x-medusa']); assert.notEqual(play.headers['x-gorgon'],other.headers['x-gorgon']);
+ assert.deepEqual(JSON.parse(play.body),{biz_param:{need_all_video_definition:true,video_platform:3},content_type:1,video_id:'123'});
+ const query=new URL(play.url).searchParams; assert.equal(query.get('version_name'),'7.3.5.32'); assert.equal(query.get('_rticket'),String(now)); assert.equal(query.has('ts'),false); assert.equal(query.get('cdid'),null); assert.match(play.headers['User-Agent'],/73532/); assert.ok(Buffer.from(play.headers['x-argus'],'base64').length>100); assert.ok(Buffer.from(play.headers['x-ladon'],'base64').length>20);
+ const other=signedVideoModel(device,{itemId:'124',now,entropy}); assert.ok(!('Cookie' in play.headers)); assert.ok(!('x-medusa' in play.headers)); assert.notEqual(play.headers['x-gorgon'],other.headers['x-gorgon']);
 });
 
 test('32 cross-language Go vectors cover current signature branches and all AES words',()=>{

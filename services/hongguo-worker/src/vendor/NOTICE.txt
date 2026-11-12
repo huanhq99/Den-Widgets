@@ -39,3 +39,26 @@ The public upstream synthetic signature vectors are retained in protocol.test.mj
 passing them validates arithmetic and request construction, not live availability.
 This combined isolated service remains distributed under GPL-3.0-only. It must
 not be linked or copied into the Den App target.
+
+player-signature.mjs is a JavaScript/Workers translation of:
+https://github.com/N3urda/hongguoTV/blob/main/kotlin-tv/core/src/main/kotlin/com/hongguotv/core/PlayerSignature.kt
+Retrieved 2026-11-12; the exact retrieved source and SHA-256 are retained in
+out/remaining-fixes-2026-11-12/hongguo-upstream and its source manifest.
+GPL-3.0-only, as part of hongguoTV; LICENSE.hongguoTV retained.
+Argus/Simon algorithm structure follows tr4cex/TikTok-Encryption (MIT),
+as credited by that source. This implementation is written from the GPL
+Kotlin implementation, without copying separate MIT source files.
+Changes: JavaScript BigInt/Buffer, injected clock and entropy for offline
+reference vectors; no network transport or shared device credentials.
+Passing vectors does not establish access to any upstream video.
+
+2026-11-12 singleVideoModel request framing (protocol.mjs non-batch path)
+follows ContentRepository.kt at hongguoTV commit
+84cdffa277905f2b37808f0f62c77d55b3472df4 (GPL-3.0-only):
+https://github.com/N3urda/hongguoTV/blob/84cdffa277905f2b37808f0f62c77d55b3472df4/kotlin-tv/core/src/main/kotlin/com/hongguotv/core/ContentRepository.kt
+Uses the explicit 7.3.5.32 player profile, sorted allowed query fields and
+content_type=1 JSON body, real PlayerSignature Argus/Ladon/Gorgon, no catalog
+Cookie or old Medusa/Helios headers. Anonymous registration/catalog protocol
+and the independent batch fallback retain their existing versions.
+Two real same-session episodes fully transferred and decoded via local workerd;
+this is not a statement that all upstream content is available.

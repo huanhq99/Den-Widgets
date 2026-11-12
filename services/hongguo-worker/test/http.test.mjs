@@ -23,7 +23,7 @@ test('single/open/suffix ranges and invalid input matrix',()=>{
 });
 test('public JS and collection are importable with no access credential disclosure',async()=>{
  const {worker}=fixture();const script=await (await worker.fetch(new Request(BASE+'/hongguo.js'),{BRIDGE_TOKEN:SECRET})).text();assert.ok(!script.includes(SECRET));assert.ok(!script.includes('__DEN_SERVICE_ORIGIN__'));
- const context=vm.createContext({});vm.runInContext(script,context);assert.equal(context.WidgetMetadata.id,'den.hongguo.cloudflare');assert.equal(context.WidgetMetadata.version,'0.1.0');assert.equal(context.WidgetMetadata.globalParams[0].value,BASE);assert.equal(context.WidgetMetadata.globalParams[1].value,'');
+ const context=vm.createContext({});vm.runInContext(script,context);assert.equal(context.WidgetMetadata.id,'den.hongguo.cloudflare');assert.equal(context.WidgetMetadata.version,'0.1.1');assert.equal(context.WidgetMetadata.globalParams[0].value,BASE);assert.equal(context.WidgetMetadata.globalParams[1].value,'');
  for(const p of ['/manifest.json','/widgets.fwd']){const data=await (await worker.fetch(new Request(BASE+p),{BRIDGE_TOKEN:SECRET})).json();assert.equal(data.widgets[0].url,BASE+'/hongguo.js');assert.ok(!JSON.stringify(data).includes(SECRET))}
 });
 test('API fails closed without a configured secret and rejects missing/wrong bearer',async()=>{

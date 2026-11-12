@@ -5,7 +5,7 @@ import { provider } from './provider.mjs';
 import moduleTemplate from './module-template.mjs';
 
 const CHUNK = 1024 * 1024;
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 
 export function byteRange(value, total) {
   if (!Number.isSafeInteger(total) || total < 1) return null;
@@ -46,7 +46,7 @@ export function createWorker(content = provider) {
       if (url.pathname === '/manifest.json' || url.pathname === '/widgets.fwd') {
         return json(200, { title: '红果 Cloudflare 模块', widgets: [{
           id: 'den.hongguo.cloudflare', title: '红果短剧（Cloudflare）', author: 'Den', version: VERSION,
-          description: 'Cloudflare 匿名接口测试版：可浏览、搜索和选集，稳定连续播放尚未通过验证。', url: url.origin + '/hongguo.js',
+          description: 'Cloudflare 匿名接口测试版：支持浏览、搜索和选集，已验证同会话两集传输与自动接播。', url: url.origin + '/hongguo.js',
         }] }, method, { 'Access-Control-Allow-Origin': '*' });
       }
       if (url.pathname === '/hongguo.js') {
@@ -59,7 +59,7 @@ export function createWorker(content = provider) {
       }
       if (url.pathname === '/') return json(200, {
         service: 'Den Hongguo Cloudflare', module: '/hongguo.js', collection: '/manifest.json',
-        status: 'preview; stable continuous playback not verified',
+        status: 'preview; two-episode same-session playback checked locally',
         access: '在模块参数中填写部署时配置的访问口令',
       }, method);
       if (!env.BRIDGE_TOKEN) return json(503, { error: '请先配置 BRIDGE_TOKEN' }, method);
@@ -155,7 +155,7 @@ export function createWorker(content = provider) {
       } catch (error) {
         // Provider failures can contain signed URLs/keys. Do not echo or log them.
         if (error?.code === 'ANONYMOUS_LIMITED') return json(429, {
-          error: '上游匿名播放访问已受限，请稍后再试；当前来源尚未验证稳定连续播放。',
+          error: '上游匿名播放访问已受限，请稍后再试。',
           code: 'UPSTREAM_ANONYMOUS_LIMITED',
         }, method, { 'Retry-After': '600' });
         if (['ANONYMOUS_REJECTED', 'REGISTRATION_REJECTED'].includes(error?.code)) return json(502, {

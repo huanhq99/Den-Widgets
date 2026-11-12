@@ -129,6 +129,8 @@ function helios(khronos, random) {
 
 function branchOf(url, body, khronos) { const bodyMd5 = body ? crypto.createHash('md5').update(body).digest() : Buffer.alloc(16); const q = sm3(url.split('?')[1]); const iv = getIv(getIv(getIv(0x20230928, q), bodyMd5), le32(khronos)); const low = iv & 15; return low - (((low * 171) >> 9) * 3); }
 
+import {playerSignature} from './player-signature.mjs';
+
 export const APP_VERSION = '7.3.9.32';
 export const VERSION_CODE = '73932';
 export const API_ORIGIN = 'https://api5-normal-sinfonlinea.fqnovel.com';
@@ -158,9 +160,9 @@ function nowMillis(now = Date.now()) {
     if (!Number.isSafeInteger(n) || n < 0) throw new TypeError('Invalid request timestamp');
     return n;
 }
-function userAgent(profile) {
+function userAgent(profile, versionCode = VERSION_CODE) {
     const d=profile.device;
-    return `com.phoenix.read/${VERSION_CODE} (Linux; U; Android ${d.osVersion}; zh_CN; ${d.model}; Build/${d.build}; Cronet/TTNetVersion:8d40f833 2026-03-03 QuicVersion:21ac1950 2025-11-18)`;
+    return `com.phoenix.read/${versionCode} (Linux; U; Android ${d.osVersion}; zh_CN; ${d.model}; Build/${d.build}; Cronet/TTNetVersion:8d40f833 2026-03-03 QuicVersion:21ac1950 2025-11-18)`;
 }
 export function registrationPlaintext(profile, {now = Date.now()} = {}) {
     const p=checkedProfile(profile), d=p.device, time=nowMillis(now);
@@ -236,10 +238,40 @@ export function signedSearch(device,{keyword,count=20,offset=0,now=Date.now(),en
     const pairs=[...devicePairs(device),['query',keyword],['tab_type','11'],['count',count],['offset',offset],['use_correct','true'],['bookshelf_search_plan','4'],['search_source','1'],['tab_name','feed'],['bookstore_tab','16'],['user_is_login','0']];
     return signedDeviceRequest(device,'/reading/bookapi/search/tab/v',pairs,{now,entropy});
 }
-export function signedVideoModel(device,{itemId,now=Date.now(),entropy}={}) {
+export function signedVideoModel(device,{itemId,now=Date.now(),entropy,batch=false}={}) {
     if (typeof itemId!=='string'||!/^\d{1,30}$/.test(itemId)) throw new TypeError('Video ID required');
-    const body=Buffer.from(JSON.stringify({biz_param:{need_all_video_definition:true,video_id_type:0,video_platform:3},video_id:itemId}));
-    return signedDeviceRequest(device,'/novel/player/video_model/v1/',devicePairs(device),{now,entropy,body});
+    if (!batch) {
+        // Current single-video protocol: sorted 7.3.5.32 profile, content_type=1,
+        // real Gorgon/Argus/Ladon, and no catalogue cookie or Medusa headers.
+        const p = checkedProfile(device), time = nowMillis(now);
+        const allowed = new Set(['ac','channel','aid','app_name','version_code','version_name',
+            'device_platform','os','ssmix','device_type','device_brand','language','os_api',
+            'os_version','manifest_version_code','resolution','dpi','update_version_code','device_id','iid']);
+        const values = Object.fromEntries(devicePairs(p).filter(([key]) => allowed.has(key)));
+        Object.assign(values,{version_code:'73532',version_name:'7.3.5.32',manifest_version_code:'73532',
+            update_version_code:'73532',_rticket:String(time)});
+        const query = Object.entries(values).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)
+            .map(([key,value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
+        const body = Buffer.from(JSON.stringify({biz_param:{need_all_video_definition:true,video_platform:3},content_type:1,video_id:itemId}));
+        const nonce = entropy?.playerNonce;
+        return {url:`https://api5-normal-sinfonlineb.fqnovel.com/novel/player/video_model/v1/?${query}`,method:'POST',body,
+            headers:{'User-Agent':userAgent(p,'73532'),Accept:'application/json','Sdk-Version':'2','X-XS-From-Web':'0',
+                'Content-Type':'application/json; charset=utf-8',...playerSignature(query,body,p.deviceId,{now:time,...(nonce?{nonce}:{})},sm3)}};
+    }
+    const payload=batch
+        ? {biz_param:{detail_page_version:0,device_level:3,disable_digg_stat:false,need_all_video_definition:true,need_mp4_align:false,use_os_player:false,use_server_dns:false,video_platform:1024},mixed_video_id_map:{'1004':[itemId]}}
+        : {biz_param:{need_all_video_definition:true,video_id_type:0,video_platform:3},video_id:itemId};
+    const body=Buffer.from(JSON.stringify(payload));
+    const request=signedDeviceRequest(device,batch?'/novel/player/multi_video_model/v1/':'/novel/player/video_model/v1/',devicePairs(device),{now,entropy,body});
+    if(batch) {
+        request.url=request.url.replace(API_ORIGIN,'https://api5-normal-sinfonlineb.fqnovel.com');
+        const query=new URL(request.url).search.slice(1);
+        Object.assign(request.headers,playerSignature(query,body,checkedProfile(device).deviceId,
+            {now:Number(request.headers['x-ss-req-ticket'])},sm3));
+        delete request.headers['x-medusa'];
+        delete request.headers['x-helios'];
+    }
+    return request;
 }
 // Export deterministic primitives for public upstream synthetic-vector verification.
 export const protocolVectors = Object.freeze({xGorgon,helios,keyHash,xmxor,buildMedusa,hashF13});
