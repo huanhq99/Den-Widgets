@@ -71,6 +71,22 @@ async function run(){
   }
   console.log('Reading: separate novel/comic native-extension identities, no video functions or embedded source accounts PASS');
   console.log('Manifest: four entries, unique identities and matching .fwd PASS');
+  const compatible=JSON.parse(await readFile(new URL('den-modules.json',root),'utf8'));
+  assert.equal(compatible.widgets.length,52);
+  assert.equal(new Set(compatible.widgets.map(e=>e.id)).size,52);
+  assert.deepEqual(compatible.widgets.filter(e=>e.id.startsWith('den.')).map(e=>e.id),manifest.widgets.map(e=>e.id));
+  assert.equal(compatible.widgets.filter(e=>e.url.endsWith('.js')).length,47);
+  assert.equal(compatible.widgets.filter(e=>e.url.endsWith('.js.md5')).length,5);
+  assert.equal(compatible.widgets.filter(e=>e.url.endsWith('.fwd')).length,0);
+  for(const entry of compatible.widgets){
+    const url=new URL(entry.url);
+    assert.equal(url.protocol,'https:');
+    assert.equal(url.username,''); assert.equal(url.password,'');
+    assert.equal(url.search,''); assert.equal(url.hash,'');
+    assert(entry.author && entry.title);
+    assert(!entry.id.startsWith('rex.'));
+  }
+  console.log('Compatible catalog: 52 unique JS/subscription entries, attribution, HTTPS and no embedded credentials PASS');
 
 }
 if(process.argv.includes('--serve')){

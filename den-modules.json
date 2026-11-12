@@ -1,0 +1,548 @@
+{
+  "title": "DenPlayer 模块合集",
+  "description": "DenPlayer 整理的模块与订阅合集，保留原作者和原地址，按需添加，不自动安装。需支持混合合集的新版 Den。",
+  "icon": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/icon.png",
+  "widgets": [
+    {
+      "id": "den.hongguotv",
+      "title": "红果短剧",
+      "description": "连接自部署 HongguoTV 服务，浏览、搜索和按集播放。 需填写自己的服务地址。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/hongguo.js"
+    },
+    {
+      "id": "den.huangguo.compat",
+      "title": "黄果接口适配",
+      "description": "连接自行配置的兼容接口，按需解析当前分集。封面代理与令牌由用户填写。 需填写自己的服务地址。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/huangguo.js"
+    },
+    {
+      "id": "den.reading.novel",
+      "title": "小说书源",
+      "description": "导入阅读 3.x 书源，搜索小说、收藏并继续阅读。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/novel.js"
+    },
+    {
+      "id": "den.reading.comic",
+      "title": "漫画图源",
+      "description": "导入异次元或阅读 3.x 图源，搜索漫画、收藏并继续阅读。",
+      "author": "Den",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/huanhq99/Den-Widgets/main/comic.js"
+    },
+    {
+      "id": "catvod.niu2",
+      "title": "牛二",
+      "author": "牛二",
+      "description": "猫源订阅，添加后按站点选择使用。",
+      "url": "https://9280.kstore.vip/cat/index.js.md5"
+    },
+    {
+      "id": "catvod.xiaosa",
+      "title": "潇洒",
+      "author": "潇洒",
+      "description": "猫源订阅，添加后按站点选择使用。",
+      "url": "https://xiaosage.361123.xyz/index.js.md5"
+    },
+    {
+      "id": "catvod.yswag",
+      "title": "Y佬",
+      "author": "Yswag",
+      "description": "猫源订阅，添加后按站点选择使用。",
+      "url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/refs/heads/jstv/index.js.md5"
+    },
+    {
+      "id": "catvod.lmentor",
+      "title": "L佬",
+      "author": "Darklessing",
+      "description": "猫源订阅，添加后按站点选择使用。",
+      "url": "https://raw.githubusercontent.com/Darklessing/catvod/refs/heads/main/lmentor/index.js.md5"
+    },
+    {
+      "id": "catvod.smdl",
+      "title": "SMDL 聚合",
+      "author": "Darklessing",
+      "description": "猫源订阅；本地新版验证58个入口及部分搜索、短时播放，不代表每站可用。",
+      "url": "https://ghfast.top/https://raw.githubusercontent.com/Darklessing/catvod/refs/heads/main/smdl/index.js.md5"
+    },
+    {
+      "id": "forward.javxx.tut",
+      "title": "AV&国产 - 123AV",
+      "description": "新作/热门/有码/无码/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.3.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Javxx_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.91porn.tut",
+      "title": "AV&国产 - 91Porn",
+      "description": "91Porn 分类/搜索/直链 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/P91_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.134x.tut",
+      "title": "AV&国产 - 134X",
+      "description": "热门/精选/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/X134_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.57cg.tut",
+      "title": "AV&国产 - 57吃瓜",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/CG57_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.cartoonporno.tut",
+      "title": "AV&国产 - Cartoonporno",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.4.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Cartoonporno_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.hanime1.tut",
+      "title": "AV&国产 - Hanime1",
+      "description": "裏番/分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Hanime1_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.jable.tut",
+      "title": "AV&国产 - Jable",
+      "description": "热门/新作/中字 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Jable_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.missav.tut",
+      "title": "AV&国产 - MissAV",
+      "description": "热门/最新/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "3.8.3",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/MissAV_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.pornhub.tut",
+      "title": "AV&国产 - Pornhub",
+      "description": "热门/分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "3.6.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Pornhub_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "user.supjav",
+      "title": "AV&国产 - SupJAV",
+      "description": "热门/最新/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.3.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/SupJAV_TuT.js",
+      "compatibility": "metadata-only",
+      "upstreamCatalogId": "forward.supjav.tut"
+    },
+    {
+      "id": "forward.xanimu.tut",
+      "title": "AV&国产 - Xanimu",
+      "description": "成人动漫 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Xanimu_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.xvideos.tut",
+      "title": "AV&国产 - Xvideos",
+      "description": "热门/最新/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Xvideos_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.rou07.tut",
+      "title": "AV&国产 - 肉视频",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.5.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Rou07_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.huadu.tut",
+      "title": "AV&国产 - 花都",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.3.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Huadu_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.mitao.tut",
+      "title": "AV&国产 - 蜜桃",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.4.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Mitao_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.bianfu.tut",
+      "title": "AV&国产 - 蝙蝠",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Bianfu_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.madou.tut",
+      "title": "AV&国产 - 麻豆",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Madou_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.91crdj.tut",
+      "title": "短剧 - 91成人",
+      "description": "短剧/漫剧/真人剧 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Crdj_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.flickreels.tut",
+      "title": "短剧 - FlickReels",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.7",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/FlickReels_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.reelshort.tut",
+      "title": "短剧 - ReelShort",
+      "description": "免费短剧（需配置代理）| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/ReelShort_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.vigloo.tut",
+      "title": "短剧 - Vigloo",
+      "description": "免费短剧（需配置代理）| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Vigloo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.chengguo.tut",
+      "title": "短剧 - 橙果",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Chengguo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.jinguoduanju.tut",
+      "title": "短剧 - 禁果",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/JingGuo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.yeguodj.tut",
+      "title": "短剧 - 野果",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.7",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Yeguo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.huangguoai.tut",
+      "title": "短剧 - 黄果",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.5.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Huangguo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.hddj.tut",
+      "title": "短剧 - 黄豆",
+      "description": "黄豆短剧（代理）· 仅免费集 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.1",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Hddj_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.huangju.tut",
+      "title": "短剧 - 红果黄剧",
+      "description": "成人短剧 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.6.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Huangju_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.hongguo.tut",
+      "title": "短剧 - 红果漫剧",
+      "description": "红果短剧/漫剧 · 分类搜索播放 · 优先1080p | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "3.4.20",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Hongguo_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.meiyao.tut",
+      "title": "短剧 - 抖音",
+      "description": "免登录官方短剧目录 · 分类筛选热榜合集 · API播放 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.4.9",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Douyin_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.hema.tut",
+      "title": "短剧 - 河马",
+      "description": "河马短剧分类、搜索与播放 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Hema_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.juwu.tut",
+      "title": "影视 - 剧屋",
+      "description": "影视聚合 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.2.2",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/juwu_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.ikanbot.tut",
+      "title": "影视 - 爱看机器人",
+      "description": "影视聚合 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.5",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Ikanbot_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.guazi.tut",
+      "title": "影视 - 瓜子",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.4",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Guazi_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.jianpian.tut",
+      "title": "影视 - 荐片",
+      "description": "分类/搜索 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.0.7",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Jianpian_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.hanju84.tut",
+      "title": "影视 - 韩剧巴士",
+      "description": "韩剧 | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "1.1.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Hanju84_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.quanpan.rex",
+      "title": "网盘 - 全盘搜索",
+      "description": "全盘影视搜索，支持夸克、百度、UC、115、123、移动、天翼、迅雷网盘及外挂字幕。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Quanpan_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "forward.pansou.tut",
+      "title": "网盘 - 盘搜",
+      "description": "盘搜站源 + 全盘同款网盘开链/通用配置 Cookie | t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.0.0",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/PanSou_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.muou",
+      "title": "网盘 - 木偶",
+      "description": "影视搜索与网盘播放，支持多版本、媒体标签和外挂字幕。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Muou_CatPaw_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.wogg",
+      "title": "网盘 - 玩偶",
+      "description": "影视搜索与网盘播放，支持多版本、媒体标签和外挂字幕。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Wogg_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.drive.accounts",
+      "title": "网盘 - 通用配置",
+      "description": "共享网盘配置。光鸭、移动、天翼、迅雷用于全盘搜索和 TG，默认关闭。搜索“保存账号”生效。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/DriveAccounts_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.huajuan",
+      "title": "网盘 - 花卷",
+      "description": "影视搜索与网盘播放，支持多版本、媒体标签和外挂字幕。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Huajuan_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.tg-channels",
+      "title": "网盘 - TG频道",
+      "description": "提取 Telegram 频道影视资源，支持网盘播放。| t.me/nostremby",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/TGChannels_TuT.js",
+      "compatibility": "metadata-only"
+    },
+    {
+      "id": "catpaw.woniu",
+      "title": "网盘 - 蜗牛",
+      "description": "共用账号模式下留空使用通用配置；仅本模块模式不回退通用配置。",
+      "requiredVersion": "0.0.1",
+      "version": "2.2.6",
+      "author": "宝宝巴士",
+      "icon": "https://fwd.uou.qzz.io/icon.png",
+      "url": "https://fwd.uou.qzz.io/widgets/Woniu_TuT.js",
+      "compatibility": "metadata-only"
+    }
+  ]
+}
