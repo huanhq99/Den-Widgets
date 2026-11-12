@@ -43,7 +43,7 @@ GitHub 的 `blob` 文件页面不是原始文件；推荐复制上面的 Raw 链
 
 Den 的红果短剧功能接入的服务端项目是 **[N3urda/hongguoTV](https://github.com/N3urda/hongguoTV)**，通过其 **API v1** 获取推荐、搜索、剧集详情和播放地址。已有服务器可以继续使用；希望将接口直接部署到 Cloudflare 的用户，可按下面的独立教程操作。
 
-**[红果 Cloudflare 部署教程 →](services/hongguo-worker/README.md)**：从下载源码、登录 CF、设置访问口令到导入 Den，附更新方法和常见报错。接口与 JS 都可部署到自己的 CF，无需 NAS 常驻。**目前是测试版，稳定连续播放尚未通过；成功部署不等于整集或连播可用。**
+**[红果 Cloudflare 部署教程 →](services/hongguo-worker/README.md)**：从下载源码、登录 CF、设置访问口令到导入 Den，附更新方法和常见报错。接口与 JS 都可部署到自己的 CF，无需 NAS 常驻。**目前是 0.1.1 测试版：已验证同一匿名会话两集完整传输，以及首集完整播放后自动接播第二集。** 更多剧集、长暂停和不同网络仍需验证，详见教程的测试范围。
 
 项目分工与来源：
 
