@@ -2,7 +2,7 @@
   "contract": "den-widget-core/2",
   "scope": "Source contract snapshot; Node checks do not certify installed Apple apps.",
   "sources": {
-    "MoonSofa/Core/Capy/CapyModels.swift": "463ab470e5a5e1820af40188e0f32f20f089b7c5496ccc6809e36c55f92a5319",
+    "MoonSofa/Core/Capy/CapyModels.swift": "7d55d09c9656ed7d0e789823567601acbfb6b908acafed11a67ee2a7062b8447",
     "MoonSofa/Core/Capy/CapyRuntime.swift": "766c95e6632514ec241ed43378fa7c8dc322256f36b22e7f6568e1b1e14d42cd",
     "MoonSofa/Core/Capy/CapyLibrary.swift": "d25647ced549d14fd55bbf3b6c2f824b3d794ceafc30ff0cf09117814cc17f0e",
     "DenTV/TVScriptRuntime.swift": "9c580930fe32dd2615621a330668810756a6d4b9de276f8ef39d7d7ccfc5f834",
