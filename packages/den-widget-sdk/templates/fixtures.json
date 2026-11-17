@@ -1,0 +1,6 @@
+[
+  {"url":"https://example.invalid/api/list?page=1","data":{"items":[{"id":"demo","title":"示例影片"}]}},
+  {"url":"https://example.invalid/api/search?keyword=demo&page=1","data":{"items":[{"id":"demo","title":"示例影片"}]}},
+  {"url":"https://example.invalid/api/detail/demo","data":{"id":"demo","title":"示例影片","versions":[{"id":"demo-hd","title":"1080P","link":"https://example.invalid/api/play/demo-hd"}]}},
+  {"url":"https://example.invalid/api/play/demo-hd","data":{"id":"demo-hd","title":"1080P","videoUrl":"https://example.invalid/demo.mp4"}}
+]

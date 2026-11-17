@@ -1,0 +1,19 @@
+{
+  "name": "@denplayer/widget-sdk",
+  "version": "0.1.0",
+  "description": "Den Widget host contract, local runner and module authoring tools",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "bin": { "den-widget": "./bin/den-widget.mjs" },
+  "exports": {
+    ".": { "types": "./types/index.d.ts", "import": "./src/index.mjs" },
+    "./env": { "types": "./types/env.d.ts", "default": "./src/env.mjs" },
+    "./testing": { "types": "./types/testing.d.ts", "import": "./src/testing.mjs" },
+    "./contract": { "types": "./types/contract.d.ts", "import": "./src/contract.mjs" },
+    "./package.json": "./package.json"
+  },
+  "files": ["bin", "src", "types", "templates", "README.md", "CHANGELOG.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"],
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "repository": { "type": "git", "url": "https://github.com/huanhq99/Den-Widgets.git", "directory": "packages/den-widget-sdk" }
+}

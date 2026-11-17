@@ -1,5 +1,9 @@
 # DenPlayer 模块
 
+## Den Widget SDK 0.1.0（开发预览）
+
+模块作者可使用 [Den Widget SDK](packages/den-widget-sdk/README.md)：宿主接口类型、一键模板、离线测试与检查命令，按统一协议编写新模块。源码在本仓库，克隆后即可使用，暂未发布 npm。工具不改变现有 App，不保证 Rex／ForwardWidget 专有 API 全部可用；平台边界见 SDK 文档。
+
 ## DenPlayer 模块合集
 
 [`den-modules.json`](den-modules.json) 将可选 Den JS、猫源订阅和第三方 ForwardWidget 模块收进一个目录。导入一个文件后，按需选择其中的模块／订阅，不会默认安装全部来源。它与原来的 `manifest.json` 官方模块目录分开，不恢复 App 中已移除的红果／黄果默认项。

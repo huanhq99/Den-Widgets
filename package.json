@@ -1,1 +1,12 @@
-{"name":"den-widgets","private":true,"type":"module","scripts":{"test":"node checks.mjs","fixture":"node checks.mjs --serve"},"engines":{"node":">=22"},"license":"MIT"}
+{
+  "name": "den-widgets", "private": true, "type": "module",
+  "scripts": {
+    "test": "node checks.mjs", "fixture": "node checks.mjs --serve",
+    "sdk:sync": "node scripts/sync-sdk-host.mjs",
+    "sdk:check": "node scripts/sync-sdk-host.mjs --check",
+    "sdk:test": "node --test packages/den-widget-sdk/test/*.test.mjs",
+    "sdk:verify-package": "node scripts/check-sdk-package.mjs",
+    "sdk:pack": "npm pack ./packages/den-widget-sdk"
+  },
+  "engines": {"node": ">=22"}, "license": "MIT"
+}

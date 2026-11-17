@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "lib": ["ES2022"], "types": ["@denplayer/widget-sdk/env"],
+    "allowJs": true, "checkJs": true, "noEmit": true, "strict": true
+  },
+  "files": ["widget.js"]
+}
