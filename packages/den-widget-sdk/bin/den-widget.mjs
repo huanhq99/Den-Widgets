@@ -33,7 +33,7 @@ function parse(argv) {
 async function main() {
   const argv = process.argv.slice(2);
   if (!argv.length || argv.includes('--help')) { console.log(help); return; }
-  if (argv[0] === '--version') { console.log('0.1.0'); return; }
+  if (argv[0] === '--version') { console.log('0.2.0'); return; }
   const {args, opts} = parse(argv); const [command, file, fn] = args;
   if (command === 'init') {
     if (!file || args.length !== 2) throw new Error('init needs one new directory');

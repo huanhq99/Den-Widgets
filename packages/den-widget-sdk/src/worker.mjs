@@ -10,6 +10,7 @@ const sandbox = {
   URL, URLSearchParams, atob, btoa,
   sourceURL: workerData.sourceURL,
   storageJSON: JSON.stringify(workerData.storage),
+  sharedCacheJSON: JSON.stringify(workerData.sharedCache ?? {}),
   __denURL(input, base) {
     const u = new URL(input, base || undefined);
     return Object.fromEntries(['href', 'protocol', 'host', 'hostname', 'port', 'pathname', 'search', 'hash', 'username', 'password'].map(k => [k, u[k]]));
@@ -46,7 +47,7 @@ try {
   vm.runInContext(read('worker-setup.js'), context);
   // Diagnostics only. Successful calls still use the unmodified production bridge.
   vm.runInContext([
-    'const __sdkKnown = new Set(["http","storage","html","dom"]);',
+    'const __sdkKnown = new Set(["http","storage","html","dom","tmdb","sharedCache"]);',
     'globalThis.Widget = new Proxy(Widget, {get(target,key) {',
     '  if (typeof key === "string" && !__sdkKnown.has(key)) throw new Error("DEN_UNSUPPORTED:Widget."+key);',
     '  return target[key];',

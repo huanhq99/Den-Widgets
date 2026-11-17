@@ -1,4 +1,5 @@
 import {Worker} from 'node:worker_threads';
+import {inflateSync} from 'node:zlib';
 import {contract, profiles, functionPattern, validateMetadata, validateResult} from './contract.mjs';
 
 export class WidgetError extends Error {
@@ -32,7 +33,7 @@ async function network(request, origins, signal) {
     const parsed = checkedURL(url);
     if (!origins.includes(parsed.origin)) throw new WidgetError('NETWORK_BLOCKED', 'Network origin is not allowed');
     const response = await fetch(url, {method, headers: request.headers, body: body ?? undefined, signal, redirect: 'manual'});
-    if ([301, 302, 303, 307, 308].includes(response.status) && response.headers.has('location')) {
+    if (request.allow_redirects !== false && [301, 302, 303, 307, 308].includes(response.status) && response.headers.has('location')) {
       await response.body?.cancel();
       url = new URL(response.headers.get('location'), url).href;
       // No cross-origin forwarding of credentials, including redirects.
@@ -51,13 +52,14 @@ async function network(request, origins, signal) {
         }
       } finally { await reader.cancel().catch(() => {}); }
     }
-    return {status: response.status, body: Buffer.concat(chunks).toString('utf8'), headers: Object.fromEntries(response.headers), url};
+    return {status: response.status, bodyBase64: Buffer.concat(chunks).toString('base64'), headers: Object.fromEntries(response.headers), url};
   }
   throw new WidgetError('NETWORK_BLOCKED', 'Too many redirects');
 }
 
 export function createRunner(options) {
   if (typeof options?.script !== 'string' || Buffer.byteLength(options.script) > contract.limits.scriptBytes) throw new WidgetError('SCRIPT_LIMIT', 'Expected a UTF-8 script within 2 MiB');
+  if (/^REXENC(?:\r?\n|$)/.test(options.script.trimStart())) throw new WidgetError('UNSUPPORTED_ENCRYPTION', 'REXENC encryption is not supported; request an unencrypted compatible module');
   const profile = options.profile ?? 'common';
   if (!profiles[profile]) throw new WidgetError('INVALID_PROFILE', 'Unknown host profile');
   const sourceURL = checkedURL(options.sourceURL ?? 'https://example.invalid/widget.js').href;
@@ -65,6 +67,22 @@ export function createRunner(options) {
   if (!Number.isFinite(timeoutMs) || timeoutMs < 1000 || timeoutMs > contract.limits.timeoutMs) throw new WidgetError('INVALID_TIMEOUT', 'Timeout must be between 1000 and 45000 ms');
   const origins = (options.allowNetwork ?? []).map(v => checkedURL(v).origin);
   let storage = clone(options.storage ?? {});
+  const sharedCache = options.sharedCache ?? {};
+  function mergeShared(mutations) {
+    if (!Array.isArray(mutations) || mutations.length > 256) throw new WidgetError('SHARED_CACHE_LIMIT', 'Invalid shared cache mutation batch');
+    const next = clone(sharedCache);
+    for (const row of mutations) {
+      const {namespace, key, operation} = row;
+      if (typeof namespace !== 'string' || typeof key !== 'string' || !namespace || !key || namespace.length > 256 || key.length > 256) throw new WidgetError('SHARED_CACHE_LIMIT', 'Invalid shared cache key');
+      if (!Object.hasOwn(next, namespace)) Object.defineProperty(next, namespace, {value: {}, enumerable: true, configurable: true});
+      if (operation === 'remove') delete next[namespace][key];
+      else if (operation === 'set' && Buffer.byteLength(JSON.stringify(row.value)) <= 65536) Object.defineProperty(next[namespace],key,{value:clone(row.value),enumerable:true,writable:true,configurable:true});
+      else throw new WidgetError('SHARED_CACHE_LIMIT', 'Invalid shared cache operation or value');
+      if (!Object.keys(next[namespace]).length) delete next[namespace];
+    }
+    if (Buffer.byteLength(JSON.stringify(next)) > 1048576) throw new WidgetError('SHARED_CACHE_LIMIT', 'Shared cache exceeds 1 MiB');
+    return next;
+  }
   let busy = false;
   async function execute(functionName, argument, inspect, kind) {
     if (busy) throw new WidgetError('RUNNER_BUSY', 'Use a separate runner for parallel calls');
@@ -87,7 +105,7 @@ export function createRunner(options) {
         options.signal?.addEventListener('abort', externalAbort, {once: true});
         worker = new Worker(new URL('./worker.mjs', import.meta.url), {
           execArgv: [], resourceLimits: {maxOldGenerationSizeMb: 96},
-          workerData: {script: options.script, sourceURL, profile, timers: profiles[profile].timers, functionName, argument, inspect, storage}
+          workerData: {script: options.script, sourceURL, profile, timers: profiles[profile].timers, functionName, argument, inspect, storage, sharedCache}
         });
         if (options.signal?.aborted) { externalAbort(); return; }
         timer = setTimeout(() => finish(new WidgetError('TIMEOUT', 'Module execution exceeded its time budget')), timeoutMs);
@@ -104,7 +122,10 @@ export function createRunner(options) {
                 const validation = validateResult(result.value, kind);
                 if (!validation.valid) throw new WidgetError('RESULT_SCHEMA', 'Result does not satisfy the authoring contract', validation.errors);
               }
+              const nextShared = mergeShared(result.sharedCacheMutations ?? []);
               storage = clone(result.storage);
+              for (const key of Object.keys(sharedCache)) delete sharedCache[key];
+              for (const [key, value] of Object.entries(nextShared)) Object.defineProperty(sharedCache,key,{value,enumerable:true,writable:true,configurable:true});
               finish(null, {value: result.value, storage: clone(storage), requests, availableFunctions: message.availableFunctions ?? [], profile});
             } catch (e) { finish(e instanceof WidgetError ? e : new WidgetError('INVALID_RESULT', 'Module returned invalid JSON')); }
             return;
@@ -114,20 +135,32 @@ export function createRunner(options) {
           try {
             if (++requestCount > contract.limits.requests) throw new WidgetError('REQUEST_LIMIT', 'Module exceeded 40 HTTP requests');
             const raw = message.request;
-            const url = checkedURL(raw.url).href;
-            const method = String(raw.method).toUpperCase();
+            let target = raw.url;
+            if (raw.service === 'tmdb') {
+              const path = String(raw.path).replace(/^\//, '');
+              const allowed = new Set(['movie','tv','search','discover','trending','genre','person','collection','company','network','configuration','find','watch','certification']);
+              if (!path || /[%?#:\\\s]/.test(path) || !allowed.has(path.split('/')[0]) || path.split('/').some(v=>!v||v==='.'||v==='..')) throw new WidgetError('INVALID_URL','Invalid TMDB path');
+              const parsed = new URL(path, 'https://api.themoviedb.org/3/');
+              for (const [key,value] of Object.entries(raw.params ?? {})) if (!['api_key','access_token'].includes(key.toLowerCase()) && value != null) parsed.searchParams.set(key,String(value));
+              target = parsed.href;
+            }
+            const url = checkedURL(target).href;
+            const method = raw.service === 'tmdb' ? 'GET' : String(raw.method).toUpperCase();
             if (!['GET', 'POST', 'HEAD'].includes(method) || Buffer.byteLength(raw.body ?? '') > contract.limits.bodyBytes) throw new WidgetError('REQUEST_LIMIT', 'Unsupported HTTP method or oversized body');
             const headers = Object.fromEntries(Object.entries(raw.headers ?? {}).filter(([k, v]) => !/[\r\n]/.test(k + v) && !['host', 'content-length', 'connection'].includes(k.toLowerCase())));
-            const request = {url, method, headers, body: raw.body, timeout: raw.timeout};
+            const request = {url, method, headers, body: raw.body ?? null, timeout: raw.timeout, allow_redirects:raw.allow_redirects};
             requests.push(redact(request));
             let response;
             if (typeof options.fixtures === 'function') response = await options.fixtures(clone(request), abort.signal);
             else response = options.fixtures?.find(f => f.url === url && (f.method ?? 'GET').toUpperCase() === method);
-            if (!response && origins.length) response = await network(request, origins, abort.signal);
+            if (!response && origins.length && raw.service !== 'tmdb') response = await network(request, origins, abort.signal);
             if (!response) throw new WidgetError('NO_FIXTURE', 'No matching fixture; network is disabled unless explicitly allowed');
-            const body = response.body !== undefined ? String(response.body) : JSON.stringify(response.data ?? null);
+            let bytes = response.bodyBase64 !== undefined ? Buffer.from(response.bodyBase64,'base64') : Buffer.from(response.body !== undefined ? String(response.body) : JSON.stringify(response.data ?? null));
+            if (bytes.length > contract.limits.responseBytes) throw new WidgetError('RESPONSE_LIMIT', 'HTTP response exceeds the host limit');
+            if (raw.zlibMode && !raw.base64Data) {try {bytes=inflateSync(bytes,{maxOutputLength:contract.limits.responseBytes});} catch {throw new WidgetError('HTTP_DECODE','Invalid or oversized compressed response');}}
+            const body = raw.base64Data ? bytes.toString('base64') : bytes.toString('utf8');
             if (Buffer.byteLength(body) > contract.limits.responseBytes) throw new WidgetError('RESPONSE_LIMIT', 'HTTP response exceeds the host limit');
-            let data; try { data = JSON.parse(body); } catch { data = body; }
+            let data; try { data = raw.base64Data ? body : JSON.parse(body); } catch { data = body; }
             const normalized = {};
             for (const [k, v] of Object.entries(response.headers ?? {})) normalized[k.toLowerCase()] = Array.isArray(v) ? v.map(String) : [String(v)];
             if (!settled) worker.postMessage({kind: 'http-reply', id: message.id, response: {ok: (response.status ?? 200) >= 200 && (response.status ?? 200) < 300, status: response.status ?? 200, data, body, headers: normalized, url: response.url ?? url}});
@@ -146,6 +179,7 @@ export function createRunner(options) {
   return {
     profile,
     getStorage: () => clone(storage),
+    getSharedCache: () => clone(sharedCache),
     async inspect() {
       const result = await execute('', null, true);
       const validation = validateMetadata(result.value, result.availableFunctions);

@@ -1,12 +1,13 @@
 {
-  "contract": "den-widget-core/1",
+  "contract": "den-widget-core/2",
   "scope": "Source contract snapshot; Node checks do not certify installed Apple apps.",
   "sources": {
-    "MoonSofa/Core/Capy/CapyModels.swift": "8768ff2ae890cc9c2b0dd0912d642df42d3589f34b1696dffdc408fc64f6a0df",
-    "MoonSofa/Core/Capy/CapyRuntime.swift": "f4a5832841cc597fd337841d47b6b253fd414d51f87085fe503b7be59f227572",
-    "DenTV/TVScriptRuntime.swift": "3bb7f748d7c4f2f660189dfa2496329c8d8ff3059f9d2d4fc32d209ca211ddf1",
-    "MoonSofa/Resources/capy-dom.js": "b62f497a74b823d7e6006ef0508598bc2e89cdb43416d39c93154053ed39df09",
-    "MoonSofa/Resources/CapyDOM-LICENSES.txt": "8ea5790310c33d59c44d01d497263b229882bf5661d33c43915f40b972c32ed8"
+    "MoonSofa/Core/Capy/CapyModels.swift": "463ab470e5a5e1820af40188e0f32f20f089b7c5496ccc6809e36c55f92a5319",
+    "MoonSofa/Core/Capy/CapyRuntime.swift": "766c95e6632514ec241ed43378fa7c8dc322256f36b22e7f6568e1b1e14d42cd",
+    "MoonSofa/Core/Capy/CapyLibrary.swift": "d25647ced549d14fd55bbf3b6c2f824b3d794ceafc30ff0cf09117814cc17f0e",
+    "DenTV/TVScriptRuntime.swift": "9c580930fe32dd2615621a330668810756a6d4b9de276f8ef39d7d7ccfc5f834",
+    "MoonSofa/Resources/capy-dom.js": "86af8d3f0f5af9cf641bdf70681c6d9cc3d5a3ed43d06785793f67e07fe82ea0",
+    "MoonSofa/Resources/CapyDOM-LICENSES.txt": "c0a4acb050b3b9fb28a918e4a149960a9bd393ed8ffac78a7a1626a41dacf00e"
   },
   "limits": {
     "scriptBytes": 2097152,

@@ -1,8 +1,10 @@
 # DenPlayer 模块
 
-## Den Widget SDK 0.1.0（开发预览）
+## Den Widget SDK 0.2.0（开发预览）
 
 模块作者可使用 [Den Widget SDK](packages/den-widget-sdk/README.md)：宿主接口类型、一键模板、离线测试与检查命令，按统一协议编写新模块。源码在本仓库，克隆后即可使用，暂未发布 npm。工具不改变现有 App，不保证 Rex／ForwardWidget 专有 API 全部可用；平台边界见 SDK 文档。
+
+0.2.0 对应新增公开模块接口的配套 App 运行层；App 更新尚未上传，旧版安装包不会自动获得新能力。
 
 ## DenPlayer 模块合集
 

@@ -32,7 +32,8 @@ try {
   await run('generated project typecheck',process.execPath,[tsc,'-p','tsconfig.json'],project);
   await writeFile(resolve(project,'negative.js'),[
     '/// <reference types="@denplayer/widget-sdk/env" />',
-    '// @ts-expect-error No TMDB host API', 'Widget.tmdb.get("movie/1");',
+    'Widget.tmdb.get("movie/1");',
+    '// @ts-expect-error TMDB does not accept host Authorization overrides', 'Widget.tmdb.get("movie/1",{headers:{Authorization:"private"}});',
     '// @ts-expect-error PUT is not a host method', 'Widget.http.request({url:"https://example.invalid",method:"PUT"});',
     '// @ts-expect-error No browser window', 'window.alert("no");',
     '// @ts-expect-error No common timer API', 'setTimeout(()=>{},1);',

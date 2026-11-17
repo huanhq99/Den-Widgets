@@ -74,7 +74,7 @@ test('loadDetail retains host string coercion and configuration parameters', asy
   assert.equal(result.value.title,'https://example.invalid/item');assert.equal(result.value.description,'CN');
 });
 test('unsupported TMDB and browser modules fail explicitly without leaking raw script exceptions', async () => {
-  await assert.rejects(run('function list(){return Widget.tmdb.get()}').invoke('list'),code('UNSUPPORTED_API'));
+  await assert.rejects(run('function list(){return Widget.unknownApi.get()}').invoke('list'),code('UNSUPPORTED_API'));
   const error = await run("function list(){throw new Error('private-token-123')} ").invoke('list').catch(e=>e);
   assert.equal(error.code,'SCRIPT_ERROR');assert.ok(!error.message.includes('private-token'));
   await assert.rejects(run('export function list(){}').inspect(),code('SCRIPT_SYNTAX'));

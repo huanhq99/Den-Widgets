@@ -10,6 +10,25 @@ self.addEventListener('message',event=>{
   if(message.error)pending.reject(new Error('Component HTTP failed'));else pending.resolve(message.response);
 });
 const saved = JSON.parse(storageJSON);
+const shared = JSON.parse(typeof sharedCacheJSON === 'string' ? sharedCacheJSON : '{}');
+const sharedMutations = [];
+function sharedKey(namespace,key) {
+  namespace=String(namespace);key=String(key);
+  if (!namespace || !key || namespace.length>256 || key.length>256) throw new Error('Invalid shared cache key');
+  return [namespace,key];
+}
+function updateShared(namespace,key,value,remove) {
+  [namespace,key]=sharedKey(namespace,key);
+  if(sharedMutations.length>=256)throw new Error('Shared cache mutation limit');
+  if(remove){if(Object.hasOwn(shared,namespace))delete shared[namespace][key];}
+  else {
+    const copy=JSON.parse(JSON.stringify(value===undefined?null:value));
+    if(JSON.stringify(copy).length>65536)throw new Error('Shared cache value limit');
+    if(!Object.hasOwn(shared,namespace))Object.defineProperty(shared,namespace,{value:Object.create(null),enumerable:true});
+    Object.defineProperty(shared[namespace],key,{value:copy,writable:true,enumerable:true,configurable:true});
+  }
+  sharedMutations.push({namespace,key,operation:remove?'remove':'set',value:remove?null:shared[namespace][key]});
+}
 async function request(input, options) {
   options = options || {};
   const url = new URL(String(input), sourceURL);
@@ -24,11 +43,15 @@ async function request(input, options) {
   }
   const response = await hostHTTP({
     url: url.href, method: options.method || 'GET', headers,
-    body: body == null ? null : body, timeout: Number(options.timeout) || 20000
+    body: body == null ? null : body, timeout: Number(options.timeout) || 20000,
+    base64Data:!!options.base64Data,zlibMode:!!options.zlibMode,allow_redirects:options.allow_redirects!==false
   });
+  response.statusCode=response.status;
+  response.headerValues=response.headers;
+  response.headers=Object.fromEntries(Object.entries(response.headerValues).map(([k,v])=>[k,Array.isArray(v)?v.join(', '):String(v)]));
   response.text = async () => response.body;
   response.json = async () => JSON.parse(response.body);
-  response.headers.get = key => (response.headers[String(key).toLowerCase()] || []).join(', ');
+  Object.defineProperty(response.headers,'get',{value:key=>response.headers[String(key).toLowerCase()]||''});
   return response;
 }
 const documents = new Map(); let documentID = 0;
@@ -45,6 +68,14 @@ function selection(elements) {
   };
 }
 function htmlLoad(html) {
+  if(typeof globalThis.__capyCheerioLoad==='function'){
+    const $=globalThis.__capyCheerioLoad(...arguments);
+    $.root().find('*').each((i,node)=>{
+      if(typeof node.getAttribute!=='function')Object.defineProperty(node,'getAttribute',{value:name=>node.attribs&&Object.hasOwn(node.attribs,name)?node.attribs[name]:null});
+      if(!('textContent' in node))Object.defineProperty(node,'textContent',{get:()=>$(node).text()});
+    });
+    return $;
+  }
   const doc = new DOMParser().parseFromString(String(html), 'text/html');
   return selector => selection(typeof selector === 'string' ? nodes(doc, selector) : [selector]);
 }
@@ -60,6 +91,10 @@ globalThis.Widget = {
          head:(url,opts) => request(url,Object.assign({},opts,{method:'HEAD'})),
          post:(url,data,opts) => request(url,Object.assign({},opts,{method:'POST',data})),
          request:opts => request(opts.url,opts)},
+  tmdb: {get:async (path,options) => {
+    const response=await hostHTTP({service:'tmdb',path:String(path),params:options&&options.params||{},timeout:Number(options&&options.timeout)||20000});
+    return response.data;
+  }},
   html: {load:htmlLoad},
   dom: {
     parse:html => {const id=++documentID;documents.set(id,new DOMParser().parseFromString(String(html),'text/html'));return id;},
@@ -68,8 +103,17 @@ globalThis.Widget = {
     attr:(node,name) => node && node.attributes ? node.attributes[name] || null : null,
     remove:id => documents.delete(id)
   },
-  storage: {get:(key,fallback) => Object.hasOwn(saved,key) ? saved[key] : fallback,
+  storage: {get:(key,fallback=null) => Object.hasOwn(saved,key) ? saved[key] : fallback,
             getAsync:async (key,fallback) => Object.hasOwn(saved,key) ? saved[key] : fallback,
-            set:(key,value) => {saved[key]=value;}, remove:key => {delete saved[key];}}
+            set:(key,value) => {Object.defineProperty(saved,String(key),{value,writable:true,enumerable:true,configurable:true});return Promise.resolve();},
+            remove:key => {delete saved[key];return Promise.resolve();},
+            keys:async () => Object.keys(saved),
+            clear:() => {for(const key of Object.keys(saved))delete saved[key];return Promise.resolve();}},
+  sharedCache: {
+    get:(namespace,key)=>{[namespace,key]=sharedKey(namespace,key);return Object.hasOwn(shared,namespace)&&Object.hasOwn(shared[namespace],key)?shared[namespace][key]:null;},
+    set:(namespace,key,value)=>updateShared(namespace,key,value,false),
+    remove:(namespace,key)=>updateShared(namespace,key,null,true)
+  }
 };
 globalThis.__moonCapyStorage = saved;
+globalThis.__moonCapySharedMutations = sharedMutations;

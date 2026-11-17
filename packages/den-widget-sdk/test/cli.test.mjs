@@ -26,7 +26,7 @@ test('CLI scaffold preserves existing folders; generated file validates and buil
     await assert.rejects(command('build',script,'--out',script));
     const run=JSON.parse((await command('run',script,'search','--params','{"keyword":"demo","page":1}','--fixtures',resolve(project,'fixtures.json'),'--kind','list','--profile','tv')).stdout);
     assert.equal(run.value[0].id,'demo');
-    assert.equal((await command('--version')).stdout.trim(),'0.1.0');
+    assert.equal((await command('--version')).stdout.trim(),'0.2.0');
   } finally {await rm(root,{recursive:true,force:true});}
 });
 test('CLI refuses malformed script / JSON, bad arguments and unknown profile',async()=>{

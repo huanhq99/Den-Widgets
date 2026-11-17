@@ -11,6 +11,7 @@ const dest = resolve(repo, 'packages/den-widget-sdk/src/generated');
 const paths = {
   models: 'MoonSofa/Core/Capy/CapyModels.swift',
   http: 'MoonSofa/Core/Capy/CapyRuntime.swift',
+  library: 'MoonSofa/Core/Capy/CapyLibrary.swift',
   tv: 'DenTV/TVScriptRuntime.swift',
   dom: 'MoonSofa/Resources/capy-dom.js',
   notices: 'MoonSofa/Resources/CapyDOM-LICENSES.txt'
@@ -29,7 +30,7 @@ const files = {
   'dom.js': data.dom
 };
 const manifest = {
-  contract: 'den-widget-core/1',
+  contract: 'den-widget-core/2',
   scope: 'Source contract snapshot; Node checks do not certify installed Apple apps.',
   sources: Object.fromEntries(Object.entries(paths).map(([key, path]) => [path, createHash('sha256').update(data[key]).digest('hex')])),
   limits: {scriptBytes: 2097152, resultBytes: 4194304, responseBytes: 4194304, bodyBytes: 524288, requests: 40, timeoutMs: 45000}

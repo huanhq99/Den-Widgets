@@ -12,6 +12,7 @@ export interface Request {
 export interface FixtureResponse {
   status?: number;
   body?: string;
+  bodyBase64?: string;
   data?: JSONValue;
   headers?: Record<string, string | string[]>;
   url?: string;
@@ -23,6 +24,8 @@ export interface RunnerOptions {
   profile?: Profile;
   timeoutMs?: number;
   storage?: Record<string, JSONValue>;
+  /** Share the same object between runners to test cross-module cache access. */
+  sharedCache?: Record<string, Record<string, JSONValue>>;
   signal?: AbortLike;
   /** Network is off by default. Exact origins only; redirects cannot cross origins. */
   allowNetwork?: string[];
@@ -40,6 +43,7 @@ export interface Inspection extends Result<Metadata> {metadata: Metadata; valida
 export interface Runner {
   readonly profile: Profile;
   getStorage(): Record<string, JSONValue>;
+  getSharedCache(): Record<string, Record<string, JSONValue>>;
   inspect(): Promise<Inspection>;
   invoke<T = JSONValue>(functionName: string, argument?: JSONValue, kind?: 'list' | 'detail'): Promise<Result<T>>;
 }

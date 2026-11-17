@@ -14,4 +14,4 @@ if (!functionName) {
   }
   value = await fn.call(owner,argument);
 }
-return JSON.stringify({value:value === undefined ? null : value, storage:saved});
+return JSON.stringify({value:value === undefined ? null : value, storage:saved,sharedCacheMutations:globalThis.__moonCapySharedMutations});
