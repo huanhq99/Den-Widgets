@@ -57,13 +57,13 @@ export function createWorker(content = provider) {
           'Access-Control-Allow-Origin': '*', 'X-Content-Type-Options': 'nosniff',
         } });
       }
+      const token = typeof env.BRIDGE_TOKEN === 'string' ? env.BRIDGE_TOKEN.trim() : '';
       if (url.pathname === '/') return json(200, {
         service: 'Den Hongguo Cloudflare', module: '/hongguo.js', collection: '/manifest.json',
         status: 'preview; two-episode same-session playback checked locally',
-        access: '在模块参数中填写部署时配置的访问口令',
+        access: token ? '在模块参数中填写部署时配置的访问口令' : '无需口令，直接填写服务地址即可使用',
       }, method);
-      if (!env.BRIDGE_TOKEN) return json(503, { error: '请先配置 BRIDGE_TOKEN' }, method);
-      if (!authorized(request, env.BRIDGE_TOKEN)) return json(401, { error: '访问口令不正确' }, method, { 'WWW-Authenticate': 'Bearer' });
+      if (token && !authorized(request, token)) return json(401, { error: '访问口令不正确' }, method, { 'WWW-Authenticate': 'Bearer' });
 
       try {
         if (url.pathname === '/health') return json(200, {
@@ -81,9 +81,21 @@ export function createWorker(content = provider) {
         }
         const series = /^\/api\/series\/(\d{1,30})$/.exec(url.pathname);
         if (series) return json(200, await content.detail(series[1], { signal: request.signal }), method);
-        const episode = /^\/api\/episodes\/(\d{1,30})\/(play|stream)$/.exec(url.pathname);
+        const episode = /^\/api\/episodes\/(\d{1,30})\/(play|stream|danmaku)$/.exec(url.pathname);
         if (!episode) return json(404, { error: '接口不存在' }, method);
         const id = episode[1];
+        if (episode[2] === 'danmaku') {
+          const seriesId = (url.searchParams.get('seriesId') || '').trim();
+          if (seriesId && !/^\d{1,30}$/.test(seriesId)) return json(400, { error: '短剧 ID 无效' }, method);
+          const durationText = (url.searchParams.get('durationMs') || '').trim();
+          let durationMs = 0;
+          if (durationText) {
+            if (!/^\d{1,9}$/.test(durationText) || Number(durationText) < 1) return json(400, { error: '时长参数无效' }, method);
+            durationMs = Number(durationText);
+          }
+          const result = await content.danmaku(id, { seriesId, durationMs }, { signal: request.signal });
+          return json(200, result, method);
+        }
         if (episode[2] === 'play') {
           const prepared = await content.stream(id, url.searchParams.get('fresh') === '1', { signal: request.signal });
           prepared.dispose?.();

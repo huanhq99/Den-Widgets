@@ -61,11 +61,13 @@ test('ordered signed search current app fingerprint and POST body integrity',()=
  assert.equal(r.headers.Cookie,device.cookie); assert.match(r.headers['User-Agent'],/23127PN0CC/);
  assert.ok(!('Authorization' in r.headers)); assert.ok(!('x-ss-stub' in r.headers));
  const play=signedVideoModel(device,{itemId:'123',now,entropy});
- assert.equal(play.method,'POST'); assert.equal(new URL(play.url).pathname,'/novel/player/video_model/v1/');
- assert.equal(play.headers['x-ss-stub'],createHash('md5').update(play.body).digest('hex').toUpperCase());
- assert.deepEqual(JSON.parse(play.body),{biz_param:{need_all_video_definition:true,video_platform:3},content_type:1,video_id:'123'});
- const query=new URL(play.url).searchParams; assert.equal(query.get('version_name'),'7.3.5.32'); assert.equal(query.get('_rticket'),String(now)); assert.equal(query.has('ts'),false); assert.equal(query.get('cdid'),null); assert.match(play.headers['User-Agent'],/73532/); assert.ok(Buffer.from(play.headers['x-argus'],'base64').length>100); assert.ok(Buffer.from(play.headers['x-ladon'],'base64').length>20);
- const other=signedVideoModel(device,{itemId:'124',now,entropy}); assert.ok(!('Cookie' in play.headers)); assert.ok(!('x-medusa' in play.headers)); assert.notEqual(play.headers['x-gorgon'],other.headers['x-gorgon']);
+ assert.equal(play.method,'GET'); assert.equal(new URL(play.url).pathname,'/reading/bookapi/video_tab/multi_video_model/v1/');
+ assert.ok(!('x-ss-stub' in play.headers)); assert.ok(!('Cookie' in play.headers));
+ const query=new URL(play.url).searchParams; assert.equal(query.get('version_name'),'7.4.3.32'); assert.equal(query.get('video_id'),'123'); assert.equal(query.has('ts'),false); assert.equal(query.get('cdid'),device.cdid); assert.match(play.headers['User-Agent'],/73932/); assert.ok(Buffer.from(play.headers['x-medusa'],'base64').length>100); assert.ok(Buffer.from(play.headers['x-helios'],'base64').length>20);
+ const batchPlay=signedVideoModel(device,{itemId:'124',now,entropy,batch:true});
+ assert.equal(batchPlay.method,'POST'); assert.equal(new URL(batchPlay.url).pathname,'/novel/player/multi_video_model/player/v1');
+ assert.equal(batchPlay.headers['x-ss-stub'],createHash('md5').update(batchPlay.body).digest('hex').toUpperCase());
+ assert.equal(batchPlay.headers['Content-Encoding'],'gzip');
 });
 
 test('32 cross-language Go vectors cover current signature branches and all AES words',()=>{

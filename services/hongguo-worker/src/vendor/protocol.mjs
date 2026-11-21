@@ -130,6 +130,7 @@ function helios(khronos, random) {
 function branchOf(url, body, khronos) { const bodyMd5 = body ? crypto.createHash('md5').update(body).digest() : Buffer.alloc(16); const q = sm3(url.split('?')[1]); const iv = getIv(getIv(getIv(0x20230928, q), bodyMd5), le32(khronos)); const low = iv & 15; return low - (((low * 171) >> 9) * 3); }
 
 import {playerSignature} from './player-signature.mjs';
+import {signPlaybackV5} from './playback-v5.mjs';
 
 export const APP_VERSION = '7.3.9.32';
 export const VERSION_CODE = '73932';
@@ -238,40 +239,111 @@ export function signedSearch(device,{keyword,count=20,offset=0,now=Date.now(),en
     const pairs=[...devicePairs(device),['query',keyword],['tab_type','11'],['count',count],['offset',offset],['use_correct','true'],['bookshelf_search_plan','4'],['search_source','1'],['tab_name','feed'],['bookstore_tab','16'],['user_is_login','0']];
     return signedDeviceRequest(device,'/reading/bookapi/search/tab/v',pairs,{now,entropy});
 }
+export const DANMAKU_PAGE_SIZE = 90;
+export const DANMAKU_FALLBACK_DURATION = 60 * 60 * 1000;
+export function signedDanmaku(device,{seriesId='',episodeId,startMs=0,durationMs=DANMAKU_FALLBACK_DURATION,count=DANMAKU_PAGE_SIZE,cursor='',now=Date.now(),entropy}={}) {
+    if (typeof episodeId!=='string'||!/^\d{1,30}$/.test(episodeId)) throw new TypeError('Episode ID required');
+    if (seriesId!=='' && (typeof seriesId!=='string'||!/^\d{1,30}$/.test(seriesId))) throw new TypeError('Invalid series ID');
+    if (!Number.isSafeInteger(startMs)||startMs<0) throw new TypeError('Invalid danmaku start offset');
+    const resolvedCount = Number.isInteger(count) && count > 0 ? Math.min(count, 200) : DANMAKU_PAGE_SIZE;
+    const resolvedDuration = Number.isSafeInteger(durationMs) && durationMs > 0 ? durationMs : DANMAKU_FALLBACK_DURATION;
+    const body = Buffer.from(JSON.stringify({
+        aid: 8662,
+        comment_source: 601,
+        server_channel: 1000,
+        comment_type: 20,
+        compliance_status: 0,
+        count: resolvedCount,
+        cursor: typeof cursor === 'string' ? cursor : '',
+        group_id: episodeId,
+        group_type: 30,
+        sort: 1,
+        business_param: {
+            book_id: seriesId,
+            start_offset_time: startMs,
+            playlet_item_duration: resolvedDuration,
+            need_danmaku_guide_type: [1, 3, 4, 2],
+        },
+    }), 'utf8');
+    return signedDeviceRequest(device, `/novel/commentapi/comment/list/${episodeId}/v1/`, devicePairs(device), { now, entropy, body });
+}
 export function signedVideoModel(device,{itemId,now=Date.now(),entropy,batch=false}={}) {
     if (typeof itemId!=='string'||!/^\d{1,30}$/.test(itemId)) throw new TypeError('Video ID required');
+    const p = checkedProfile(device), time = nowMillis(now);
+    const common = {
+        aid: '8662',
+        app_name: 'novelread',
+        version_code: '74332',
+        version_name: '7.4.3.32',
+        channel: 'vivo_8662_64',
+        device_platform: 'android',
+        device_type: 'PGT-AN10',
+        os_version: '12',
+        update_version_code: '74332',
+        iid: p.installId,
+        cdid: p.cdid,
+        device_id: p.deviceId,
+    };
     if (!batch) {
-        // Current single-video protocol: sorted 7.3.5.32 profile, content_type=1,
-        // real Gorgon/Argus/Ladon, and no catalogue cookie or Medusa headers.
-        const p = checkedProfile(device), time = nowMillis(now);
-        const allowed = new Set(['ac','channel','aid','app_name','version_code','version_name',
-            'device_platform','os','ssmix','device_type','device_brand','language','os_api',
-            'os_version','manifest_version_code','resolution','dpi','update_version_code','device_id','iid']);
-        const values = Object.fromEntries(devicePairs(p).filter(([key]) => allowed.has(key)));
-        Object.assign(values,{version_code:'73532',version_name:'7.3.5.32',manifest_version_code:'73532',
-            update_version_code:'73532',_rticket:String(time)});
-        const query = Object.entries(values).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)
-            .map(([key,value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-        const body = Buffer.from(JSON.stringify({biz_param:{need_all_video_definition:true,video_platform:3},content_type:1,video_id:itemId}));
-        const nonce = entropy?.playerNonce;
-        return {url:`https://api5-normal-sinfonlineb.fqnovel.com/novel/player/video_model/v1/?${query}`,method:'POST',body,
-            headers:{'User-Agent':userAgent(p,'73532'),Accept:'application/json','Sdk-Version':'2','X-XS-From-Web':'0',
-                'Content-Type':'application/json; charset=utf-8',...playerSignature(query,body,p.deviceId,{now:time,...(nonce?{nonce}:{})},sm3)}};
+        const base = 'https://api5-normal-sinfonlineb.fqnovel.com/reading/bookapi/video_tab/multi_video_model/v1/';
+        const signed = signPlaybackV5({
+            base,
+            values: {
+                ...common,
+                video_id: itemId,
+                video_id_type: '0',
+                device_level: '1',
+                need_all_video_definition: '1',
+                need_mp4_align: '0',
+                use_os_player: '0',
+                video_platform: '1024',
+                source: '0',
+                from_video_id: '',
+            },
+            body: null,
+            now: time,
+            sm3,
+        });
+        return {
+            url: signed.url,
+            method: 'GET',
+            headers: {
+                'User-Agent': 'com.phoenix.read/73932 (Linux; U; Android 16; zh_CN; 25053RT47C; Build/BP2A.250605.031.A3)',
+                Accept: 'application/json',
+                ...signed.headers,
+            },
+        };
     }
-    const payload=batch
-        ? {biz_param:{detail_page_version:0,device_level:3,disable_digg_stat:false,need_all_video_definition:true,need_mp4_align:false,use_os_player:false,use_server_dns:false,video_platform:1024},mixed_video_id_map:{'1004':[itemId]}}
-        : {biz_param:{need_all_video_definition:true,video_id_type:0,video_platform:3},video_id:itemId};
-    const body=Buffer.from(JSON.stringify(payload));
-    const request=signedDeviceRequest(device,batch?'/novel/player/multi_video_model/v1/':'/novel/player/video_model/v1/',devicePairs(device),{now,entropy,body});
-    if(batch) {
-        request.url=request.url.replace(API_ORIGIN,'https://api5-normal-sinfonlineb.fqnovel.com');
-        const query=new URL(request.url).search.slice(1);
-        Object.assign(request.headers,playerSignature(query,body,checkedProfile(device).deviceId,
-            {now:Number(request.headers['x-ss-req-ticket'])},sm3));
-        delete request.headers['x-medusa'];
-        delete request.headers['x-helios'];
-    }
-    return request;
+    const base = 'https://api5-normal-sinfonlineb.fqnovel.com/novel/player/multi_video_model/player/v1';
+    const payload = JSON.stringify({
+        biz_param: {
+            detail_page_version: 0,
+            device_level: 1,
+            disable_digg_stat: false,
+            disable_video_relate_book: false,
+            need_all_video_definition: true,
+            need_mp4_align: false,
+            use_os_player: false,
+            use_server_dns: false,
+            video_platform: 1024,
+        },
+        mixed_video_id_map: { '1004': [itemId] },
+        dr_scene: 'player',
+    });
+    const body = Buffer.from(gzipSync(Buffer.from(payload, 'utf8')));
+    const signed = signPlaybackV5({ base, values: common, body, now: time, sm3 });
+    return {
+        url: signed.url,
+        method: 'POST',
+        body,
+        headers: {
+            'User-Agent': 'com.phoenix.read/73932 (Linux; U; Android 12; zh_CN_#Hans; PGT-AN10; Build/V417IR;tt-ok/3.12.13.20)',
+            Accept: 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Encoding': 'gzip',
+            ...signed.headers,
+        },
+    };
 }
 // Export deterministic primitives for public upstream synthetic-vector verification.
 export const protocolVectors = Object.freeze({xGorgon,helios,keyHash,xmxor,buildMedusa,hashF13});

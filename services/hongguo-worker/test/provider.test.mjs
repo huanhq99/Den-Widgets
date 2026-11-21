@@ -45,7 +45,7 @@ const fetcher=async(input,init={})=>{const url=new URL(input);calls.push(url.pat
  if(url.pathname==='/reading/bookapi/search/tab/v')return Response.json({code:0,search_tabs:[{tab_type:11,has_more:false,data:[{video_data:[{series_id:'123',video_detail:{series_title:'Fixture'}}]}]}]});
  if(url.pathname==='/category'||url.pathname.startsWith('/search/'))return new Response('<script>_ROUTER_DATA='+JSON.stringify({loaderData:{category_page:{recommendList:[{series_id:'123',series_name:'Fixture'}]},search_page:{searchList:[{series_id:'123',series_name:'Fixture'}]}}})+';</script>');
  if(url.pathname==='/detail')return new Response('_ROUTER_DATA='+JSON.stringify({loaderData:{detail_page:{seriesDetail:{series_id:'123',series_name:'Fixture',vid_list:['456','457']}}}}));
- if(url.pathname==='/novel/player/video_model/v1/'){playerCalls++;assert(!new Headers(init.headers).has('authorization'));assert(!new Headers(init.headers).has('cookie'));assert(!new Headers(init.headers).has('x-medusa'));assert.equal(JSON.parse(Buffer.from(init.body).toString()).content_type,1);const id=JSON.parse(Buffer.from(init.body).toString()).video_id;return Response.json({code:0,data:{video_model:id==='456'?{video_list:{high:{main_url:'https://v.test.douyinvod.com/file.mp4',video_meta:{vheight:1080},encrypt_info:{spade_a:spadeA}}}}:null}});}
+ if(url.pathname==='/reading/bookapi/video_tab/multi_video_model/v1/'){playerCalls++;assert.equal(init.method,'GET');assert(!new Headers(init.headers).has('authorization'));assert(!new Headers(init.headers).has('cookie'));assert(new Headers(init.headers).has('x-medusa'));const id=url.searchParams.get('video_id');return Response.json({code:0,data:{video_model_data:{[id]:{video_model:id==='456'?{video_list:{high:{main_url:'https://v.test.douyinvod.com/file.mp4',video_meta:{vheight:1080},encrypt_info:{spade_a:spadeA}}}}:null}}}});}
  if(url.pathname==='/fallback')return Response.json({video_info:{data:{video_list:{high:{main_url:'https://v.test.douyinvod.com/file.mp4',height:1080,spade_a:spadeA}}}}});
  if(url.pathname==='/file.mp4'){mediaCalls++; if(stall==='headers')return new Promise(()=>{});const range=/bytes=(\d+)-(\d+)/.exec(new Headers(init.headers).get('range'));const start=+range[1],end=Math.min(+range[2],media.length-1);let at=start,index=0;
  const body=new ReadableStream({pull(c){if(stall==='body')return new Promise(()=>{});if(init.signal?.aborted){c.error(init.signal.reason);return;}if(at>end){c.close();return;}const n=[1,7,13,129,65,257][index++%6];const stop=Math.min(at+n,end+1);c.enqueue(media.subarray(at,stop));at=stop;},cancel(){cancelled++;}},{highWaterMark:0});
@@ -124,4 +124,94 @@ test('explicit upstream rejection never rotates registered device',async()=>{
 test('malformed or rounded anonymous registration is rejected',async()=>{
  const p=createProvider({fetch:async()=>Response.json({device_id:1234567890123456789,install_id:2234567890123456789})});
  await assert.rejects(()=>p.search('one'),e=>e.code==='REGISTRATION_REJECTED');
+});
+
+test('danmaku pages automatically, deduplicates, sorts by timeMs and caches',async()=>{
+ let pages=0;
+ const bodies=[];
+ const p=createProvider({fetch:async(input,init={})=>{
+  const url=new URL(input);
+  if(url.pathname.includes('device_register'))return Response.json({device_id_str:'1234567890123456789',install_id_str:'2234567890123456789'},{headers:{'set-cookie':'ttreq=guest; Path=/; HttpOnly'}});
+  if(url.pathname==='/novel/commentapi/comment/list/456/v1/'){
+   assert.equal(init.method,'POST');
+   assert(new Headers(init.headers).has('x-medusa'));
+   assert(new Headers(init.headers).has('x-ss-stub'));
+   const payload=JSON.parse(Buffer.from(init.body).toString('utf8'));
+   bodies.push(payload);
+   pages++;
+   if(pages===1){
+    return Response.json({code:0,data:{
+     data_list:[
+      {comment:{comment_id:'c2',common:{content:{text:' 反转来了 '}},expand:{offset_time:12500},stat:{digg_count:10,add_one_count:3}}},
+      {comment:{comment_id:'c1',common:{content:{text:'开头打卡'}},expand:{offset_time:320},stat:{digg_count:5,add_one_count:1}}},
+      {comment:{comment_id:'c_blank',common:{content:{text:'   '}},expand:{offset_time:400},stat:{}}},
+      {comment:{comment_id:'c_notime',common:{content:{text:'无时间'}},expand:{},stat:{}}},
+     ],
+     common_list_info:{has_more:true,cursor:JSON.stringify({start_offset_time:0,end_offset_time:30000,danmaku_count:88})},
+     extra:{next_query_danmaku_list_time:30000},
+    }});
+   }
+   return Response.json({code:0,data:{
+    data_list:[
+     {comment:{comment_id:'c2',common:{content:{text:'重复项应被去重'}},expand:{offset_time:12500},stat:{digg_count:10,add_one_count:3}}},
+     {comment:{comment_id:'c3',common:{content:{text:'结局封神'}},expand:{offset_time:35000},stat:{digg_count:2,add_one_count:0}}},
+    ],
+    common_list_info:{has_more:false,cursor:JSON.stringify({start_offset_time:30000,end_offset_time:60000,danmaku_count:88})},
+    extra:{next_query_danmaku_list_time:60000},
+   }});
+  }
+  throw new Error('Unexpected '+url.pathname);
+ }});
+ const first=await p.danmaku('456',{seriesId:'123',durationMs:90000});
+ assert.equal(pages,2);
+ assert.equal(bodies[0].business_param.book_id,'123');
+ assert.equal(bodies[0].business_param.start_offset_time,0);
+ assert.equal(bodies[0].business_param.playlet_item_duration,91000);
+ assert.equal(bodies[1].business_param.start_offset_time,30000);
+ assert.equal(first.episodeId,'456');
+ assert.equal(first.seriesId,'123');
+ assert.equal(first.total,88);
+ assert.deepEqual(first.items,[
+  {id:'c1',timeMs:320,text:'开头打卡',likes:5,plusOnes:1},
+  {id:'c2',timeMs:12500,text:'反转来了',likes:10,plusOnes:3},
+  {id:'c3',timeMs:35000,text:'结局封神',likes:2,plusOnes:0},
+ ]);
+ // Second call hits memory cache.
+ const second=await p.danmaku('456',{seriesId:'123',durationMs:90000});
+ assert.equal(pages,2);
+ assert.deepEqual(second,first);
+});
+
+test('danmaku stops on non-advancing cursor, page limit and non-zero code',async()=>{
+ let loopCalls=0;
+ const looping=createProvider({fetch:async input=>{
+  const url=new URL(input);
+  if(url.pathname.includes('device_register'))return Response.json({device_id_str:'1234567890123456789',install_id_str:'2234567890123456789'});
+  loopCalls++;
+  return Response.json({code:0,data:{
+   data_list:[{comment:{comment_id:'id-'+loopCalls,common:{content:{text:'item '+loopCalls}},expand:{offset_time:loopCalls*1000},stat:{}}}],
+   common_list_info:{has_more:true,cursor:'{"session_id":"s"}'},
+   extra:{next_query_danmaku_list_time:loopCalls*10000},
+  }});
+ }});
+ const capped=await looping.danmaku('456',{seriesId:'123',durationMs:900000,maxPages:3});
+ assert.equal(loopCalls,3);
+ assert.equal(capped.items.length,3);
+
+ let stuckCalls=0;
+ const stuck=createProvider({fetch:async input=>{
+  const url=new URL(input);
+  if(url.pathname.includes('device_register'))return Response.json({device_id_str:'1234567890123456789',install_id_str:'2234567890123456789'});
+  stuckCalls++;
+  return Response.json({code:0,data:{data_list:[],common_list_info:{has_more:true,cursor:'{"s":1}'},extra:{next_query_danmaku_list_time:0}}});
+ }});
+ await stuck.danmaku('456',{seriesId:'123',durationMs:90000});
+ assert.equal(stuckCalls,1);
+
+ const rejected=createProvider({fetch:async input=>{
+  const url=new URL(input);
+  if(url.pathname.includes('device_register'))return Response.json({device_id_str:'1234567890123456789',install_id_str:'2234567890123456789'});
+  return Response.json({code:103001,data:{}});
+ }});
+ await assert.rejects(()=>rejected.danmaku('456',{seriesId:'123'}),e=>e.code==='ANONYMOUS_REJECTED');
 });

@@ -7,10 +7,10 @@ const BASE='https://fixture-worker.example';
 const SIZE=3*1024*1024+257;
 const bytes=(a,b)=>Uint8Array.from({length:b-a+1},(_,i)=>(i+a)%251);
 function fixture({failFirst=false, failLater=false, wrongLength=false, fallback=false}={}) {
- const calls={open:0,chunk:[],dispose:0,home:0,search:0,detail:0,stream:[]};
+ const calls={open:0,chunk:[],dispose:0,home:0,search:0,detail:0,stream:[],danmaku:[]};
  const prepared={total:SIZE,dispose(){calls.dispose++},async chunk(a,b){calls.chunk.push([a,b]);if(failFirst)throw new Error('secret=https://upstream.invalid/signed?key=private');return bytes(a,b)}};
  if(!fallback)prepared.open=async(a,b)=>{calls.open++;let offset=a;return new ReadableStream({pull(c){if(failFirst||failLater&&offset>a)throw new Error('private-signed-url');if(offset>b){c.close();return}const end=Math.min(b,offset+65535);c.enqueue(bytes(offset,wrongLength?end+1:end));offset=end+1}})};
- const provider={async home(page){calls.home++;return {items:[{id:'9223372036854775807',title:'fixture'}],page}},async search(q,page){calls.search++;return {items:[{id:'9223372036854775807',title:q}],page}},async detail(id){calls.detail++;return {id,title:'fixture',episodes:[{id:'9223372036854775808',number:1}]}},async stream(id,fresh){calls.stream.push({id,fresh});return prepared}};
+ const provider={async home(page){calls.home++;return {items:[{id:'9223372036854775807',title:'fixture'}],page}},async search(q,page){calls.search++;return {items:[{id:'9223372036854775807',title:q}],page}},async detail(id){calls.detail++;return {id,title:'fixture',episodes:[{id:'9223372036854775808',number:1}]}},async stream(id,fresh){calls.stream.push({id,fresh});return prepared},async danmaku(episodeId,options){calls.danmaku.push({episodeId,...options});return {episodeId,seriesId:options.seriesId||'',total:2,items:[{id:'1',timeMs:500,text:'第一条弹幕',likes:3,plusOnes:1},{id:'2',timeMs:2400,text:'第二条弹幕',likes:0,plusOnes:0}]}}};
  return {worker:createWorker(provider),calls};
 }
 const request=(path,options={})=>new Request(BASE+path,{headers:{Authorization:'Bearer '+SECRET,...options.headers},...Object.fromEntries(Object.entries(options).filter(([k])=>k!=='headers'))});
@@ -26,10 +26,10 @@ test('public JS and collection are importable with no access credential disclosu
  const context=vm.createContext({});vm.runInContext(script,context);assert.equal(context.WidgetMetadata.id,'den.hongguo.cloudflare');assert.equal(context.WidgetMetadata.version,'0.1.1');assert.equal(context.WidgetMetadata.globalParams[0].value,BASE);assert.equal(context.WidgetMetadata.globalParams[1].value,'');
  for(const p of ['/manifest.json','/widgets.fwd']){const data=await (await worker.fetch(new Request(BASE+p),{BRIDGE_TOKEN:SECRET})).json();assert.equal(data.widgets[0].url,BASE+'/hongguo.js');assert.ok(!JSON.stringify(data).includes(SECRET))}
 });
-test('API fails closed without a configured secret and rejects missing/wrong bearer',async()=>{
- const {worker,calls}=fixture();assert.equal((await worker.fetch(request('/api/home'),{})).status,503);
+test('API allows tokenless access without a configured secret and rejects missing/wrong bearer when configured',async()=>{
+ const {worker,calls}=fixture();assert.equal((await worker.fetch(new Request(BASE+'/api/home'),{})).status,200);assert.equal(calls.home,1);
  for(const auth of ['', 'Bearer wrong'])assert.equal((await worker.fetch(new Request(BASE+'/api/home',{headers:{Authorization:auth}}),{BRIDGE_TOKEN:SECRET})).status,401);
- assert.equal(calls.home,0);
+ assert.equal(calls.home,1);
 });
 test('metadata IDs stay exact strings and input errors never call provider',async()=>{
  const {worker,calls}=fixture();const data=await(await run(worker,'/api/home?page=2')).json();assert.equal(data.items[0].id,'9223372036854775807');assert.equal(data.page,2);
@@ -74,7 +74,34 @@ test('served JS drives API v1 health, browse, search, detail and selected playba
  const rows=await context.loadHome(params);assert.equal(rows[0].id,'hg:9223372036854775807');
  const found=await context.search({...params,keyword:'Synthetic'});assert.equal(found[0].title,'Synthetic');
  const root=await context.loadDetail(rows[0].link);assert.equal(root.episodeItems.length,1);assert.equal(calls.stream.length,0);
- const playable=await context.loadDetail(root.episodeItems[0].link);assert.equal(playable.videoUrl,BASE+'/api/episodes/9223372036854775808/stream');assert.equal(playable.customHeaders.Authorization,'Bearer '+SECRET);assert.equal(calls.stream.length,1);
+ const playable=await context.loadDetail(root.episodeItems[0].link);assert.equal(playable.videoUrl,BASE+'/api/episodes/9223372036854775808/stream');assert.equal(playable.danmakuUrl,BASE+'/api/episodes/9223372036854775808/danmaku?seriesId=9223372036854775807');assert.ok(!playable.danmakuUrl.includes(SECRET));assert.equal(playable.customHeaders.Authorization,'Bearer '+SECRET);assert.equal(calls.stream.length,1);
+});
+
+test('danmaku endpoint enforces bearer auth, validates query params and returns structured items',async()=>{
+ const {worker,calls}=fixture();
+ for(const auth of ['', 'Bearer wrong'])assert.equal((await worker.fetch(new Request(BASE+'/api/episodes/123/danmaku',{headers:{Authorization:auth}}),{BRIDGE_TOKEN:SECRET})).status,401);
+ for(const bad of ['/api/episodes/123/danmaku?seriesId=abc','/api/episodes/123/danmaku?durationMs=0','/api/episodes/123/danmaku?durationMs=-10','/api/episodes/123/danmaku?durationMs=1e5'])assert.equal((await run(worker,bad)).status,400);
+ assert.equal(calls.danmaku.length,0);
+ const res=await run(worker,'/api/episodes/9223372036854775808/danmaku?seriesId=9223372036854775807&durationMs=95000');
+ assert.equal(res.status,200);
+ const body=await res.json();
+ assert.equal(body.episodeId,'9223372036854775808');
+ assert.equal(body.seriesId,'9223372036854775807');
+ assert.equal(body.total,2);
+ assert.equal(body.items.length,2);
+ assert.deepEqual(calls.danmaku[0],{episodeId:'9223372036854775808',seriesId:'9223372036854775807',durationMs:95000});
+ const unauthed=(await worker.fetch(new Request(BASE+'/api/episodes/123/danmaku'),{})).status;
+ assert.equal(unauthed,200);
+});
+
+test('danmaku endpoint maps upstream error codes cleanly without leaking internals',async()=>{
+ for(const [code,status] of [['ANONYMOUS_LIMITED',429],['ANONYMOUS_REJECTED',502],['UPSTREAM_EMPTY_RESPONSE',502],['UPSTREAM_ERROR',502]]){
+  const worker=createWorker({async danmaku(){const error=new Error('secret-upstream-detail');error.code=code;throw error;}});
+  const res=await run(worker,'/api/episodes/123/danmaku?seriesId=456');
+  assert.equal(res.status,status,code);
+  const text=await res.text();
+  assert.ok(!text.includes('secret-upstream-detail'));
+ }
 });
 
 test('anonymous source quota is explicit rather than a misleading generic server failure',async()=>{

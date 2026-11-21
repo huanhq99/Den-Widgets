@@ -60,6 +60,47 @@ function card(row) {
     tags: mapped.tname ? mapped.tname.split('/') : [] };
 }
 function cards(rows) { const seen = new Set(); return rows.slice(0, 200).map(card).filter(row => row && !seen.has(row.id) && seen.add(row.id)); }
+function finiteInt(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.trunc(value);
+  if (typeof value === 'string' && /^-?\d+$/.test(value.trim())) {
+    const parsed = Number(value.trim());
+    if (Number.isSafeInteger(parsed)) return parsed;
+  }
+  return null;
+}
+function parseDanmakuWindow(data) {
+  const code = data?.code ?? data?.Code ?? 0;
+  if (String(code) !== '' && String(code) !== '0') throw fail('Anonymous upstream access was rejected', 'ANONYMOUS_REJECTED');
+  const root = data?.data && typeof data.data === 'object' ? data.data : {};
+  const list = Array.isArray(root.data_list) ? root.data_list : [];
+  const info = root.common_list_info && typeof root.common_list_info === 'object' ? root.common_list_info : {};
+  const extra = root.extra && typeof root.extra === 'object' ? root.extra : {};
+  const cursor = typeof info.cursor === 'string' ? info.cursor : '';
+  let total = 0;
+  if (cursor) {
+    try {
+      const parsed = JSON.parse(cursor);
+      const count = finiteInt(parsed?.danmaku_count);
+      if (count !== null && count > 0) total = count;
+    } catch {}
+  }
+  const items = [];
+  for (const row of list) {
+    const comment = row?.comment;
+    if (!comment || typeof comment !== 'object') continue;
+    const timeMs = finiteInt(comment.expand?.offset_time);
+    if (timeMs === null || timeMs < 0) continue;
+    const text = String(comment.common?.content?.text ?? '').trim();
+    if (!text) continue;
+    const rawId = comment.comment_id;
+    const id = rawId != null && String(rawId).trim() ? String(rawId).trim() : `${timeMs}:${text}`;
+    const likes = Math.max(0, finiteInt(comment.stat?.digg_count) ?? 0);
+    const plusOnes = Math.max(0, finiteInt(comment.stat?.add_one_count) ?? 0);
+    items.push({ id, timeMs, text, likes, plusOnes });
+  }
+  const next = finiteInt(extra.next_query_danmaku_list_time) ?? 0;
+  return { items, total, hasMore: Boolean(info.has_more), next, cursor };
+}
 function rangeInfo(response, start, end) {
   const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(response.headers.get('content-range') ?? '');
   if (response.status !== 206 || !match) throw fail('Upstream does not support byte ranges');
@@ -203,17 +244,23 @@ export function createProvider({ fetch: fetcher = globalThis.fetch, now = Date.n
   async function resolve(id, signal) {
     const data=await appJSON(identity=>protocol.signedVideoModel(identity,{itemId:id,now:now()}),signal,
       identity=>protocol.signedVideoModel(identity,{itemId:id,now:now(),batch:true}));
-    const entry=data.data?.video_model?data.data:data.data?.[id];
+    const bucket=data.data?.video_model_data && typeof data.data.video_model_data==='object'
+      ? data.data.video_model_data
+      : data.data?.['1004'] && typeof data.data['1004']==='object'
+        ? data.data['1004']
+        : data.data;
+    const entry=bucket?.video_model?bucket:bucket?.[id] ?? data.data?.[id];
     let model; try { model=typeof entry?.video_model==='string'?JSON.parse(entry.video_model):entry?.video_model; }
     catch { throw fail('Invalid video model'); }
     if(!model || typeof model!=='object')throw fail('Video model is unavailable');
     const raw=model.video_list;
     const representations=Array.isArray(raw)?raw:raw && typeof raw==='object'?Object.values(raw):[];
     const height=row=>Number(row.video_meta?.vheight ?? row.vheight ?? row.height ?? 0);
-    const candidates=representations.filter(row=>row && typeof row==='object' && typeof row.main_url==='string')
+    const codecOf=row=>String(row.codec_type ?? row.video_meta?.codec_type ?? '').toLowerCase();
+    const isSegmented=row=>Boolean(row.hls || row.m3u8 || ['dash','m3u8'].includes(String(row.video_meta?.vtype ?? row.vtype ?? '').toLowerCase()));
+    const candidates=representations.filter(row=>row && typeof row==='object' && typeof row.main_url==='string' && !isSegmented(row) && !codecOf(row).includes('bytevc2'))
       .sort((a,b)=>height(b)-height(a));
     const selected=candidates[0];if(!selected)throw fail('No muxed MP4 rendition is available','UNSUPPORTED_MEDIA');
-    if(selected.hls || selected.m3u8 || ['dash','m3u8'].includes(String(selected.video_meta?.vtype ?? selected.vtype ?? '').toLowerCase()))throw fail('Separate or segmented media is unsupported','UNSUPPORTED_MEDIA');
     let encryption=selected.encrypt_info;
     if(typeof encryption==='string'){try{encryption=JSON.parse(encryption);}catch{throw fail('Unsupported media encryption','UNSUPPORTED_MEDIA');}}
     const wrapped=encryption?.spade_a ?? selected.spade_a;
@@ -274,6 +321,47 @@ export function createProvider({ fetch: fetcher = globalThis.fetch, now = Date.n
       const ids=series.vid_list.map(identifier); if(new Set(ids).size!==ids.length)throw fail('Duplicate episode identifiers');
       const mapped=card(series); if(!mapped || mapped.id!==id)throw fail('Series identity mismatch');
       return store(metadata,key,{...mapped,id,episodes:ids.map((episode,index)=>({id:episode,title:`第 ${index+1} 集`,number:index+1}))},120000);
+    },
+    async danmaku(episodeId,{seriesId='',durationMs=0,maxPages=12}={},options={}) {
+      identifier(episodeId);
+      const sid = seriesId ? identifier(String(seriesId)) : '';
+      const rawDuration = Number(durationMs);
+      const effectiveDuration = Number.isSafeInteger(rawDuration) && rawDuration > 0
+        ? Math.min(4 * 60 * 60 * 1000, rawDuration + 1000)
+        : (protocol.DANMAKU_FALLBACK_DURATION ?? 60 * 60 * 1000);
+      const pageLimit = Math.max(1, Math.min(30, Number.isInteger(maxPages) ? maxPages : 12));
+      const key = `danmaku:${episodeId}:${sid}:${effectiveDuration}`;
+      const previous = cached(metadata, key, 24);
+      if (previous) return previous;
+      const seen = new Set();
+      const items = [];
+      let total = 0, startMs = 0, cursor = '', emptyStreak = 0;
+      for (let page = 0; page < pageLimit; page++) {
+        checkAbort(options.signal);
+        const data = await appJSON(
+          identity => protocol.signedDanmaku(identity, {
+            seriesId: sid, episodeId, startMs, durationMs: effectiveDuration, cursor, now: now(),
+          }),
+          options.signal
+        );
+        const parsed = parseDanmakuWindow(data);
+        if (parsed.total > total) total = parsed.total;
+        let added = 0;
+        for (const item of parsed.items) {
+          if (seen.has(item.id)) continue;
+          seen.add(item.id);
+          items.push(item);
+          added++;
+        }
+        emptyStreak = added === 0 ? emptyStreak + 1 : 0;
+        if (!parsed.hasMore || !parsed.cursor || parsed.next <= startMs || parsed.next >= effectiveDuration) break;
+        if (emptyStreak >= 3) break;
+        startMs = parsed.next;
+        cursor = parsed.cursor;
+      }
+      items.sort((a, b) => a.timeMs - b.timeMs);
+      const result = { episodeId, seriesId: sid, total: Math.max(total, items.length), items };
+      return store(metadata, key, result, 120000);
     },
     async stream(id,fresh=false,options={}) {
       identifier(id); checkAbort(options.signal); if(fresh)streams.delete(id);
